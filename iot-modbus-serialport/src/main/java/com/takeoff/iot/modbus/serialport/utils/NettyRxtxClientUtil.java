@@ -29,15 +29,15 @@ import lombok.extern.slf4j.Slf4j;
  */
 @Slf4j
 public class NettyRxtxClientUtil {
-	
-	public static RxtxChannel channel;
 
-	public static void createRxtx(String portName, Integer baudrate, Integer thread) throws Exception {
-		RxtxChannel rxtxChannel = new RxtxChannel();
+    public static RxtxChannel channel;
+
+    public static void createRxtx(String portName, Integer baudrate, Integer thread) throws Exception {
+        RxtxChannel rxtxChannel = new RxtxChannel();
         //串口使用阻塞io
         EventLoopGroup group = new OioEventLoopGroup(thread);
         try {
-            Bootstrap bootstrap  = new Bootstrap();
+            Bootstrap bootstrap = new Bootstrap();
             bootstrap.group(group)
                     .channelFactory(() -> {
                         rxtxChannel.config()
@@ -45,13 +45,13 @@ public class NettyRxtxClientUtil {
                                 .setDatabits(RxtxChannelConfig.Databits.DATABITS_8)
                                 .setParitybit(RxtxChannelConfig.Paritybit.NONE)
                                 .setStopbits(RxtxChannelConfig.Stopbits.STOPBITS_1);
-                        return rxtxChannel ;
+                        return rxtxChannel;
                     })
                     .handler(new ChannelInitializer<RxtxChannel>() {
                         @Override
                         protected void initChannel(RxtxChannel rxtxChannel) {
                             rxtxChannel.pipeline().addLast(
-                            		new NettyRxtxFrameDecoder(),
+                                    new NettyRxtxFrameDecoder(),
                                     new StringEncoder(StandardCharsets.UTF_8),
                                     new NettyRxtxDecoderHandler(new SerialportDataReceiveFactory())
                             );
@@ -65,11 +65,11 @@ public class NettyRxtxClientUtil {
         }
     }
 
-    public static void start(String portName, Integer baudrate, Integer thread){
-        CompletableFuture.runAsync(()->{
+    public static void start(String portName, Integer baudrate, Integer thread) {
+        CompletableFuture.runAsync(() -> {
             try {
                 //阻塞的函数
-            	createRxtx(portName, baudrate, thread);
+                createRxtx(portName, baudrate, thread);
             } catch (Exception e) {
                 e.printStackTrace();
             }
@@ -78,12 +78,13 @@ public class NettyRxtxClientUtil {
 
     /**
      * 发送数据
+     *
      * @param bytes
      */
     public static void writeAndFlush(byte[] bytes) {
-        if(!channel.isActive()
+        if (!channel.isActive()
                 || !channel.isOpen()
-                || !channel.isWritable()){
+                || !channel.isWritable()) {
             return;
         }
         ByteBuf buffer = channel.alloc().buffer();

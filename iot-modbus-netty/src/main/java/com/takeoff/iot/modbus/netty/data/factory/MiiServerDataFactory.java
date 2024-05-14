@@ -11,7 +11,6 @@ import com.takeoff.iot.modbus.common.data.MiiHumitureData;
 import com.takeoff.iot.modbus.common.data.MiiInData;
 import com.takeoff.iot.modbus.common.data.MiiLockData;
 import com.takeoff.iot.modbus.common.message.MiiMessage;
-import com.takeoff.iot.modbus.netty.data.*;
 
 /**
  * 类功能说明：指令数据处理工厂<br/>
