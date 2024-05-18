@@ -1,5 +1,7 @@
 package com.takeoff.iot.modbus.serialport.service.impl;
 
+import cn.hutool.core.util.ReUtil;
+import com.alibaba.fastjson.JSON;
 import com.google.common.primitives.Bytes;
 import com.takeoff.iot.modbus.common.message.MiiMessage;
 import com.takeoff.iot.modbus.common.utils.IntegerToByteUtil;
@@ -8,20 +10,28 @@ import com.takeoff.iot.modbus.serialport.entity.ReceiveData;
 import com.takeoff.iot.modbus.serialport.enums.DatebitsEnum;
 import com.takeoff.iot.modbus.serialport.enums.ParityEnum;
 import com.takeoff.iot.modbus.serialport.enums.StopbitsEnum;
+import com.takeoff.iot.modbus.serialport.service.MqttService;
 import com.takeoff.iot.modbus.serialport.service.SerialportService;
 import com.takeoff.iot.modbus.common.utils.BytesToHexUtil;
 import com.takeoff.iot.modbus.common.utils.JudgeEmptyUtils;
 import com.takeoff.iot.modbus.serialport.utils.NettyRxtxClientUtil;
 import com.takeoff.iot.modbus.serialport.utils.SerialPortUtil;
 import gnu.io.*;
+import io.netty.util.NetUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
+import java.math.BigDecimal;
+import java.net.InetAddress;
+import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -41,8 +51,12 @@ public class SerialportServiceImpl implements SerialportService {
     @Resource
     private SerialportDataFactory serialportDataFactory;
 
+    @Resource
+    private MqttService mqttService;
+
     /**
      * 连接串口
+     *
      * @param port
      * @param baudrate
      * @param timeout
@@ -77,8 +91,14 @@ public class SerialportServiceImpl implements SerialportService {
                                             //读取串口数据
                                             byte[] bytes = SerialPortUtil.readFromPort(serialPort);
                                             log.info("接收到的原始数据：" + BytesToHexUtil.bytesToHexString(bytes));
-                                            //数据拆包处理
-                                            unpackHandle(bytes);
+                                            //固定COM3为分拣电子秤称重读取
+                                            if (port.equals("COM3")) {
+                                                electronicScaleWeight(bytes);
+                                            } else {
+                                                //数据拆包处理
+                                                unpackHandle(bytes);
+                                            }
+
                                         } catch (InterruptedException e) {
                                             log.error(e.getMessage());
                                         }
@@ -94,7 +114,74 @@ public class SerialportServiceImpl implements SerialportService {
     }
 
     /**
+     * @Description 获取重量
+     * @Param
+     * @Author yw
+     * @Date 2024/5/16 16:14
+     * @Return
+     **/
+    public void electronicScaleWeight(byte[] bytes) {
+        String defaultValue = electronicScale(bytes);
+        InetAddress inetAddress = null;
+        try {
+            inetAddress = InetAddress.getLocalHost();
+        } catch (UnknownHostException e) {
+            throw new RuntimeException(e);
+        }
+        String ipAddress = inetAddress.getHostAddress();
+        log.info(ipAddress);
+        if (!StringUtils.isAnyEmpty(defaultValue, ipAddress)) {
+            Map<String, String> map = new HashMap<>();
+            // 正则表达式匹配金额数字
+            String regex = "\\d+(\\.\\d+)?";
+            String matches = ReUtil.get(regex, defaultValue, 0);
+            map.put("weight", matches);
+            map.put("originalWeight", defaultValue);
+            map.put("ip", ipAddress);
+            log.info("称重数据发送：" + JSON.toJSONString(map));
+            mqttService.sendToMqtt("electronic_weight", JSON.toJSONString(map));
+        }
+    }
+
+    /**
+     * @Description 读取串口电子称重
+     * @Param
+     * @Author yw
+     * @Date 2024/5/16 16:29
+     * @Return
+     **/
+    public String electronicScale(byte[] bytes) {
+        String defaultValue = "0.000";
+        if (bytes != null) {
+//            log.info("length:{}", bytes.length);
+            int num = bytes[0];
+            if (num == -1) {
+                return "-1";
+            }
+            log.info("bytes[0]:{}", bytes[0]);
+            String result = new String(bytes);
+            log.info("result:{}", result);
+            String[] weigh = result.replace("=", "").replace("kg", "").split("  ");
+            if (weigh.length > 0) {
+                String buffer = weigh[0];
+                if (buffer.contains("-")) {
+                    log.error("称重为负数:{}", buffer);
+                    return defaultValue;
+                } else {
+                    return buffer;
+                }
+            } else {
+                log.error("weigh is null");
+            }
+        } else {
+            log.error("bytes is null");
+        }
+        return "-1";
+    }
+
+    /**
      * netty连接串口
+     *
      * @param port
      * @param baudrate
      * @param thread
@@ -111,41 +198,42 @@ public class SerialportServiceImpl implements SerialportService {
 
     /**
      * 数据拆包处理
+     *
      * @param readByte
      */
     private void unpackHandle(byte[] readByte) {
-        if(readByte.length == 0){
+        if (readByte.length == 0) {
             return;
         }
-        log.info("原缓存中的数据：cacheBuffs-->" +cacheBuffs+"");
+        log.info("原缓存中的数据：cacheBuffs-->" + cacheBuffs + "");
         //将缓存数据优先处理
         List buffList = addBuffList();
         buffList.addAll(Bytes.asList(readByte));
-        log.info("待处理的数据：buffList-->" +buffList+"");
+        log.info("待处理的数据：buffList-->" + buffList + "");
         //校验标识
         boolean flag = true;
         while (flag == true) {
-            if(buffList.size() > 0){
+            if (buffList.size() > 0) {
                 try {
                     //校验指令数据
                     ReceiveData data = checkData(buffList);
                     flag = data.isFlag();
-                    if(data.isFlag() && data.getBeginIndex() >= 0 && data.getInstructLength() > data.getBeginIndex()){
+                    if (data.isFlag() && data.getBeginIndex() >= 0 && data.getInstructLength() > data.getBeginIndex()) {
                         //截取指令数据(从起始符到结束符)
                         List<Byte> dataBuff = data.getBuffList().subList(data.getBeginIndex(), data.getInstructLength() + 1);
                         //剩余的指令数据
                         buffList = data.getBuffList().subList(data.getInstructLength() + 1, data.getBuffList().size());
                         byte[] msg = Bytes.toArray(dataBuff);
-                        if(msg.length > 0){
-                            log.info("待处理的指令："+ BytesToHexUtil.bytesToHexString(msg));
+                        if (msg.length > 0) {
+                            log.info("待处理的指令：" + BytesToHexUtil.bytesToHexString(msg));
                             serialportDataFactory.buildData(msg);
                         }
                     }
                 } catch (Exception e) {
                     flag = false;
-                    log.error("指令数据处理异常："+e.getMessage());
+                    log.error("指令数据处理异常：" + e.getMessage());
                 }
-            }else{
+            } else {
                 flag = false;
             }
         }
@@ -178,25 +266,25 @@ public class SerialportServiceImpl implements SerialportService {
         //获取最后一个起始符下标
         int lastBeginIndex = buffList.lastIndexOf(MiiMessage.BEGIN_BYTES[0]);
         //如果是异常指令直接丢弃
-        if(beginIndex == -1){
-            log.info("接收到不合法指令，直接丢弃不处理：buffList-->" +buffList+"");
+        if (beginIndex == -1) {
+            log.info("接收到不合法指令，直接丢弃不处理：buffList-->" + buffList + "");
             buffList.clear();
             buffList = null;
             buffList = new ArrayList<>();
             data.setFlag(false);
-        }else if(beginIndex != -1 && !BytesToHexUtil.bytesToHexString(endByte).equals(BytesToHexUtil.bytesToHexString(MiiMessage.END_BYTES))){
+        } else if (beginIndex != -1 && !BytesToHexUtil.bytesToHexString(endByte).equals(BytesToHexUtil.bytesToHexString(MiiMessage.END_BYTES))) {
             //去掉不合法指令
             buffList = buffList.subList(lastBeginIndex, buffList.size());
             buffListByte = Bytes.toArray(buffList);
             beginIndex = buffList.indexOf(MiiMessage.BEGIN_BYTES[0]);
             dataLength = getDataLength(buffListByte, beginIndex);
             instructLength = getInstructLength(dataLength);
-            if(buffList.size() != instructLength + 1){
+            if (buffList.size() != instructLength + 1) {
                 cacheBuffs.addAll(buffList);
-                log.info("接收到有起始符没有结束符的指令，暂不处理，放入缓存：cacheBuffs-->" +cacheBuffs+"");
+                log.info("接收到有起始符没有结束符的指令，暂不处理，放入缓存：cacheBuffs-->" + cacheBuffs + "");
                 data.setFlag(false);
             }
-        }else if(endIndex != -1 && beginIndex > endIndex){
+        } else if (endIndex != -1 && beginIndex > endIndex) {
             buffList = buffList.subList(lastBeginIndex, buffList.size());
             buffListByte = Bytes.toArray(buffList);
             //确保起始符下标小于结束符下标
@@ -204,9 +292,9 @@ public class SerialportServiceImpl implements SerialportService {
             dataLength = getDataLength(buffListByte, beginIndex);
             instructLength = getInstructLength(dataLength);
             endIndex = buffList.indexOf(MiiMessage.END_BYTES[0]);
-            if(endIndex == -1){
+            if (endIndex == -1) {
                 cacheBuffs.addAll(buffList);
-                log.info("处理后的指令有起始符没有结束符，暂不处理，放入缓存：cacheBuffs-->" +cacheBuffs+"");
+                log.info("处理后的指令有起始符没有结束符，暂不处理，放入缓存：cacheBuffs-->" + cacheBuffs + "");
                 data.setFlag(false);
             }
         }
@@ -230,9 +318,9 @@ public class SerialportServiceImpl implements SerialportService {
      */
     private byte[] getEndByte(byte[] buffListByte, int beginIndex, int instructLength) {
         byte[] endByte = new byte[0];
-        if(beginIndex > 0){
+        if (beginIndex > 0) {
             endByte = ArrayUtils.subarray(buffListByte, beginIndex + instructLength, beginIndex + instructLength + 1);
-        }else{
+        } else {
             endByte = ArrayUtils.subarray(buffListByte, instructLength, instructLength + 1);
         }
         return endByte;
@@ -265,7 +353,7 @@ public class SerialportServiceImpl implements SerialportService {
      */
     private int getInstructLength(byte[] dataLength) {
         int instructLength = 0;
-        if(dataLength.length > 0){
+        if (dataLength.length > 0) {
             //指令数据下标从0开始，总长度需要减1
             instructLength = MiiMessage.BEGIN_SIZE + MiiMessage.DATA_SIZE + IntegerToByteUtil.bytesToInt(dataLength) + MiiMessage.CHECKCODE_SIZE + MiiMessage.END_SIZE - 1;
         }
@@ -283,7 +371,7 @@ public class SerialportServiceImpl implements SerialportService {
      */
     private List addBuffList() {
         List buffList = new ArrayList<>();
-        if(!JudgeEmptyUtils.isEmpty(cacheBuffs)){
+        if (!JudgeEmptyUtils.isEmpty(cacheBuffs)) {
             buffList.addAll(cacheBuffs);
             //清空静态变量数据，释放内存
             cacheBuffs.clear();
@@ -306,13 +394,14 @@ public class SerialportServiceImpl implements SerialportService {
 
     /**
      * 发送数据到串口
+     *
      * @param bytes
      */
     @Override
     public void serialportSendData(byte[] bytes) {
         if (!JudgeEmptyUtils.isEmpty(serialPort)) {
             SerialPortUtil.sendToPort(serialPort, bytes);
-        }else{
+        } else {
             NettyRxtxClientUtil.writeAndFlush(bytes);
         }
     }

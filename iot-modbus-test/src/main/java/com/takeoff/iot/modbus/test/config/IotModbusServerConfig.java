@@ -41,6 +41,9 @@ public class IotModbusServerConfig implements ApplicationRunner {
 
 	@Resource
 	private HumitureListener humitureListener;
+
+	@Resource
+	private NetWeightListener netWeightListener;
 	
 	@Getter
 	private MiiServer miiServer;
@@ -55,6 +58,7 @@ public class IotModbusServerConfig implements ApplicationRunner {
 			miiServer.addListener(MiiMessage.BARCODE, barCodeListener);
 			miiServer.addListener(MiiMessage.FINGER, fingerListener);
 			miiServer.addListener(MiiMessage.HM, humitureListener);
+			miiServer.addListener(MiiMessage.ESCALE, netWeightListener);
 			log.info("IOT通讯协议已开启Socket服务，占用端口： " + iotModbusServerProperties.getPort() + ",执行线程池线程数:" + iotModbusServerProperties.getThread());
 			miiServer.start();
 		}else{

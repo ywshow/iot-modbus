@@ -58,6 +58,8 @@ public class SerialportSendServiceImpl implements SerialportSendService {
 
     private static final MiiMessageFactory<Integer> BACKLIGHT = new MiiOutMessageFactory<>(BYTESFACTORY_SLOT);
 
+    private static final MiiMessageFactory<Integer> NET_WEIGHT = new MiiOutMessageFactory<>(BYTESFACTORY_SLOT);
+
     private static final MiiMessageFactory<Object> FINGER = new MiiOutMessageFactory<>(
             new MiiFingerBytesCombinedFactory<Object>(
                     new MiiBytesFactorySubWrapper<Integer, Object>(BYTESFACTORY_FINGER, 0, 10)
@@ -105,6 +107,11 @@ public class SerialportSendServiceImpl implements SerialportSendService {
     @Override
     public void barcode(String deviceGroup, int device, int mode) {
         sendMessage(BARCODE, deviceGroup, MiiMessage.BARCODE, device, MiiData.NULL, MiiData.NULL, mode);
+    }
+
+    @Override
+    public void netWeight(String deviceGroup, int device, int mode) {
+        sendMessage(NET_WEIGHT, deviceGroup, MiiMessage.ESCALE, device, MiiData.NULL, MiiData.NULL, mode);
     }
 
     @Override

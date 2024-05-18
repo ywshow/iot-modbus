@@ -36,6 +36,14 @@ public interface SerialportSendService {
     void barcode(String deviceGroup, int device, int mode);
 
     /**
+     * 发送设置扫码模式指令.
+     * @param deviceGroup 设备组编码
+     * @param device 设备号
+     * @param mode  扫码模式 {@link com.takeoff.iot.modbus.common.data.MiiData} ONCE ALWAYS NEVER
+     */
+    void netWeight(String deviceGroup, int device, int mode);
+
+    /**
      * 发送背光灯指令.
      * @param deviceGroup 设备组编码
      * @param device 设备号

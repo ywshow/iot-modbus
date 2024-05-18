@@ -8,8 +8,4 @@ ${AnsiColor.BRIGHT_YELLOW}
                                           #+#         #+#       #+#           #+#
                                          #####         ###########            ###
 
-                                                       www.takeoff.org                           
-
-                                             TF（腾飞）开源 Microservice Architecture
-
 

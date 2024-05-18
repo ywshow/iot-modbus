@@ -17,21 +17,33 @@ iot:
     server:
       open: true
       port: 4000
-      thread: 10
+      thread: 30
       heart-beat-time: 30000 #心跳检测超时时间(单位：毫秒)
     client:
       open: false
-      ips: 127.0.0.1,192.168.1.198 #设置读写器IP,多个使用英文逗号隔开
+      ips: 127.0.0.1,192.168.0.53 #设置读写器IP,多个使用英文逗号隔开
       port: 5000
-      thread: 10
+      thread: 30
       device-group: 1
       heart-beat-time: 3000 #心跳发送间隔时间(单位：毫秒)
       reconnect-time: 5000 #断线重连间隔时间(单位：毫秒)
   serialport: #串口通讯
     open: true
-    port: COM1
-    netty: true #是否使用netty对数据进行拆包处理
+    port: COM3
+    netty: false #是否使用netty对数据进行拆包处理
     timeout: 5000 #链接超时时间，不使用netty对数据进行拆包处理时必填
-    baudrate: 115200
-    thread: 10
+    baudrate: 9600
+    thread: 30
     sleep-time: 2 #接收数据休眠时间(单位：毫秒)，串口方式必填
+mqtt:
+  serverURIs: tcp://hczn-emqx:1883
+  #serverURIs: tcp://192.168.0.109:1883
+  username: admin
+  password: lvyuan!
+  qos: 2
+  client:
+    id: client_weight
+  # 默认主题
+  topic: topic_default
+  subList:
+    - topic_default

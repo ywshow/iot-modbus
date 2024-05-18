@@ -2,30 +2,17 @@ package com.takeoff.iot.modbus.serialport.data.factory;
 
 import java.util.Arrays;
 
+import com.takeoff.iot.modbus.common.data.*;
+import com.takeoff.iot.modbus.serialport.data.*;
 import org.apache.commons.lang3.ArrayUtils;
 import org.bouncycastle.util.encoders.Hex;
 import org.springframework.context.ApplicationContext;
 import org.springframework.stereotype.Service;
 
 import com.alibaba.fastjson.JSON;
-import com.takeoff.iot.modbus.common.data.MiiBackLightData;
-import com.takeoff.iot.modbus.common.data.MiiBarcodeData;
-import com.takeoff.iot.modbus.common.data.MiiCardData;
-import com.takeoff.iot.modbus.common.data.MiiFingerData;
-import com.takeoff.iot.modbus.common.data.MiiHeartBeatData;
-import com.takeoff.iot.modbus.common.data.MiiHumitureData;
-import com.takeoff.iot.modbus.common.data.MiiLockData;
 import com.takeoff.iot.modbus.common.message.MiiMessage;
 import com.takeoff.iot.modbus.common.utils.IntegerToByteUtil;
 import com.takeoff.iot.modbus.common.utils.ModbusCrc16Utils;
-import com.takeoff.iot.modbus.serialport.data.BackLightData;
-import com.takeoff.iot.modbus.serialport.data.BarCodeData;
-import com.takeoff.iot.modbus.serialport.data.CardData;
-import com.takeoff.iot.modbus.serialport.data.FingerData;
-import com.takeoff.iot.modbus.serialport.data.HeartBeatData;
-import com.takeoff.iot.modbus.serialport.data.HumitureData;
-import com.takeoff.iot.modbus.serialport.data.LockData;
-import com.takeoff.iot.modbus.serialport.data.ReceiveDataEvent;
 import com.takeoff.iot.modbus.common.utils.JudgeEmptyUtils;
 import com.takeoff.iot.modbus.serialport.utils.SpringContextUtils;
 
@@ -43,33 +30,34 @@ public class SerialportDataReceiveFactory implements SerialportDataFactory {
     @Override
     public void buildData(byte[] msg) {
         byte[] headBytes = {msg[MiiMessage.BEGIN_INDEX]};
-        if(!Arrays.equals(MiiMessage.BEGIN_BYTES, headBytes)){
+        if (!Arrays.equals(MiiMessage.BEGIN_BYTES, headBytes)) {
             log.error(String.format("报文头异常:%s", Hex.toHexString(msg)));
             return;
         }
         byte[] datas = ArrayUtils.subarray(msg, MiiMessage.COMMAND_INDEX, msg.length - 3);
         byte[] dataLength = ArrayUtils.subarray(msg, MiiMessage.DATA_INDEX, MiiMessage.COMMAND_INDEX);
-        if(datas.length != IntegerToByteUtil.bytesToInt(dataLength)){
+        if (datas.length != IntegerToByteUtil.bytesToInt(dataLength)) {
             log.error(String.format("报文长短异常:%s", Hex.toHexString(msg)));
             return;
         }
-        byte[] checkcode = {msg[msg.length - 3],msg[msg.length - 2]};
+        byte[] checkcode = {msg[msg.length - 3], msg[msg.length - 2]};
         byte[] checkData = ArrayUtils.subarray(msg, MiiMessage.DATA_INDEX, msg.length - 3);
-        if(!ModbusCrc16Utils.getCrcString(checkData).equals(Hex.toHexString(checkcode))){
+        if (!ModbusCrc16Utils.getCrcString(checkData).equals(Hex.toHexString(checkcode))) {
             log.error(String.format("报文校验码校验错误:%s", Hex.toHexString(msg)));
             return;
         }
         int command = msg[MiiMessage.COMMAND_INDEX] & 0x7F;
         ReceiveDataEvent receiveDataEvent = handleData(command, datas);
         ApplicationContext getApplicationContext = SpringContextUtils.applicationContext;
-        if(!JudgeEmptyUtils.isEmpty(receiveDataEvent) && !JudgeEmptyUtils.isEmpty(getApplicationContext)){
-            log.info("将数据发送给对接的指令监听器："+ JSON.toJSONString(receiveDataEvent));
+        if (!JudgeEmptyUtils.isEmpty(receiveDataEvent) && !JudgeEmptyUtils.isEmpty(getApplicationContext)) {
+            log.info("将数据发送给对接的指令监听器：" + JSON.toJSONString(receiveDataEvent));
             getApplicationContext.publishEvent(receiveDataEvent);
         }
     }
 
     /**
      * 数据处理工厂
+     *
      * @param command
      * @param datas
      * @return
@@ -97,6 +85,9 @@ public class SerialportDataReceiveFactory implements SerialportDataFactory {
                 break;
             case MiiMessage.HM:
                 handleData = new HumitureData(this, command, new MiiHumitureData(datas));
+                break;
+            case MiiMessage.ESCALE:
+                handleData = new NetWeightData(this, command, new MiiNetWeightData(datas));
                 break;
             default:
                 break;
