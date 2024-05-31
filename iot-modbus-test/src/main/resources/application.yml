@@ -42,6 +42,7 @@ mqtt:
   password: lvyuan!
   qos: 2
   client:
+    #伺候id改为获取本机ip
     id: client_weight
   # 默认主题
   topic: topic_default

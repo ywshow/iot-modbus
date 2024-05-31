@@ -1,5 +1,7 @@
 package com.takeoff.iot.modbus.serialport.conf;
 
+import cn.hutool.core.net.NetUtil;
+import cn.hutool.core.util.StrUtil;
 import lombok.Data;
 import lombok.extern.slf4j.Slf4j;
 import org.eclipse.paho.client.mqttv3.MqttConnectOptions;
@@ -61,7 +63,11 @@ public class MqttConfig {
 
     @PostConstruct
     public void init() {
-        log.debug("username:{} password:{} serverURIs:{} clientId :{} topic:{} qos:{} subList:{}",
+        String ipStr = NetUtil.getLocalhostStr();
+        if(!StrUtil.isEmpty(ipStr)){
+            this.clientId = String.valueOf(NetUtil.ipv4ToLong(ipStr));
+        }
+        log.info("username:{} password:{} serverURIs:{} clientId :{} topic:{} qos:{} subList:{}",
                 this.username, this.password, this.serverURIs, this.clientId, this.topic, this.qos, this.subList);
     }
 
