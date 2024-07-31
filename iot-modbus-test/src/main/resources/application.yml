@@ -10,7 +10,7 @@ server:
 
 devtools:
   restart:
-    enabled: true #是否支持热部署
+    enabled: false #是否支持热部署
 
 iot:
   netty: # netty通讯
@@ -48,3 +48,4 @@ mqtt:
   topic: topic_default
   subList:
     - topic_default
+    - sort_weight_topic
