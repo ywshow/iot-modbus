@@ -49,3 +49,7 @@ mqtt:
   subList:
     - topic_default
     - sort_weight_topic
+mqtt-info:
+  subList:
+    - topic_default
+    - sort_weight_topic

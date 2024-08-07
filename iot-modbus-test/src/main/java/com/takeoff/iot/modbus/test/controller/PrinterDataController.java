@@ -5,7 +5,9 @@ import cn.hutool.core.io.FileUtil;
 import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
+import com.takeoff.iot.modbus.common.entity.Param;
 import com.takeoff.iot.modbus.common.entity.PrinterData;
+import com.takeoff.iot.modbus.test.service.MqttLogicService;
 import com.takeoff.iot.modbus.test.service.PrinterDataService;
 import com.takeoff.iot.modbus.test.utils.R;
 import lombok.extern.slf4j.Slf4j;
@@ -29,6 +31,9 @@ public class PrinterDataController {
 
     @Autowired
     private PrinterDataService printerDataService;
+
+    @Autowired
+    private MqttLogicService mqttLogicService;
 
     /**
      * @Description 打开驱动
@@ -141,6 +146,28 @@ public class PrinterDataController {
             return R.ok();
         } catch (Exception e) {
             log.error("convertSingleColorBMP", e);
+            if (e instanceof UtilException) {
+                return R.error(e.getMessage());
+            } else {
+                return R.error("服务异常");
+            }
+        }
+    }
+
+    /**
+     * @Description 称重mqtt推送
+     * @Param map 参数
+     * @Author yw
+     * @Date 2024/7/31 11:00
+     * @Return
+     **/
+    @RequestMapping("/mq/printer")
+    public R mqPrinter(@RequestBody Param<PrinterData> param) {
+        try {
+            mqttLogicService.sentToServer(param);
+            return R.ok();
+        } catch (Exception e) {
+            log.error("mqPrinter", e);
             if (e instanceof UtilException) {
                 return R.error(e.getMessage());
             } else {

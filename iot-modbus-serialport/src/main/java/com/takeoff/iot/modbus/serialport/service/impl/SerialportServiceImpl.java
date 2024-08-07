@@ -17,7 +17,6 @@ import com.takeoff.iot.modbus.common.utils.JudgeEmptyUtils;
 import com.takeoff.iot.modbus.serialport.utils.NettyRxtxClientUtil;
 import com.takeoff.iot.modbus.serialport.utils.SerialPortUtil;
 import gnu.io.*;
-import io.netty.util.NetUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.apache.commons.lang3.ArrayUtils;
 import org.apache.commons.lang3.StringUtils;
@@ -25,7 +24,6 @@ import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
 
-import java.math.BigDecimal;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.util.ArrayList;

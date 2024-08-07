@@ -89,4 +89,9 @@ public class PrinterData {
      * 原产地
      */
     private String provenance;
+
+    /**
+     * 是否标品，0：否；1：是
+     */
+    private Integer standard;
 }

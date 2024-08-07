@@ -169,7 +169,17 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         Printer printer = PrinterUtils.PrinterOpen(list.get(0));
 
 //        versionFirst(tbsData, printer);
-        versionSecond(tbsData, printer, file);
+
+        //标品不打印，非标品重量跟销售重量一样不打印
+        if(tbsData.getStandard() == 0){
+            if (tbsData.getWeight().divide(BigDecimal.valueOf(tbsData.getQuantity()), 0, RoundingMode.HALF_UP).compareTo(tbsData.getPerWeight()) != 0){
+                versionSecond(tbsData, printer, file);
+            }
+        }
+        //分拣的每份重量，与购买的重量不匹配，则打印
+        /*if (tbsData.getWeight().divide(BigDecimal.valueOf(tbsData.getQuantity()), 0, RoundingMode.HALF_UP).compareTo(tbsData.getPerWeight()) != 0) {
+            versionSecond(tbsData, printer, file);
+        }*/
         return tbsData;
     }
 
@@ -376,7 +386,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         /*只能是两行的商品名称，再多的话，因为第一行会多出“品名：”，商行以上的话，换行不准确，暂时只保留两行，太长容不下**/
         if (goodsLength.compareTo(rowOfNumber) <= 0) {
             //商品
-            String text = "TEXT " + offsetSecond_x + "," + (offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"品名：" + tbsData.getGoodsName() + "\"\r\n";
+            String text = "TEXT " + offsetSecond_x + "," + (offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"商品：" + tbsData.getGoodsName() + "\"\r\n";
             PrinterUtils.PrinterWrite(printer, text.getBytes("GBK"), text.getBytes("GBK").length);
         } else {
             /*商品打印换行截取**/
@@ -403,7 +413,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
                 } else {
                     subStr = tbsData.getGoodsName().substring(i, index);
                     //商品
-                    String text = "TEXT " + offsetSecond_x + "," + (numIndex * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"品名：" + subStr + "\"\r\n";
+                    String text = "TEXT " + offsetSecond_x + "," + (numIndex * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"商品：" + subStr + "\"\r\n";
                     PrinterUtils.PrinterWrite(printer, text.getBytes("GBK"), text.getBytes("GBK").length);
                 }
 
@@ -425,16 +435,16 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         String provenance = "TEXT " + offsetSecond_x + "," + ((num + 2) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"电话：" + tbsData.getPhone() + "\"\r\n";
         PrinterUtils.PrinterWrite(printer, provenance.getBytes("GBK"), provenance.getBytes("GBK").length);
 
-        //价格
-        String price = "TEXT " + offsetSecond_x + "," + ((num + 3) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"价格：" + tbsData.getPrice() + " 元\"\r\n";
-        PrinterUtils.PrinterWrite(printer, price.getBytes("GBK"), price.getBytes("GBK").length);
-
         //规格
         int quantity = tbsData.getWeight().divide(tbsData.getPerWeight(), 0, RoundingMode.HALF_UP).intValue();
         BigDecimal actWeight = tbsData.getWeight().divide(BigDecimal.valueOf(quantity), 0, RoundingMode.HALF_UP);
         String weightInfo = actWeight + " * " + quantity;
-        String weight = "TEXT " + offsetSecond_x + "," + ((num + 4) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"重量：" + weightInfo + " /g\"\r\n";
+        String weight = "TEXT " + offsetSecond_x + "," + ((num + 3) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"重量：" + weightInfo + " /g\"\r\n";
         PrinterUtils.PrinterWrite(printer, weight.getBytes("GBK"), weight.getBytes("GBK").length);
+
+        //价格
+        /*String price = "TEXT " + offsetSecond_x + "," + ((num + 4) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"价格：" + tbsData.getPrice() + " 元\"\r\n";
+        PrinterUtils.PrinterWrite(printer, price.getBytes("GBK"), price.getBytes("GBK").length);*/
 
 
         //企业名称

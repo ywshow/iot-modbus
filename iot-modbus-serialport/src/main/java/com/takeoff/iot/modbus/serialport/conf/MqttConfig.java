@@ -10,6 +10,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.integration.annotation.IntegrationComponentScan;
 import org.springframework.integration.annotation.ServiceActivator;
 import org.springframework.integration.channel.DirectChannel;
@@ -32,12 +33,12 @@ import java.util.List;
 @Data
 public class MqttConfig {
 
-    public static final String CHANNEL_NAME_OUT = "mqttOutboundChannel";
+    public static final String CHANNEL_NAME_OUT = "mqttOutboundChannelIot";
 
     /**
      * 订阅的bean名称
      */
-    public static final String CHANNEL_NAME_IN = "mqttInboundChannel";
+    public static final String CHANNEL_NAME_IN = "mqttInboundChannelIot";
 
     // 客户端与服务器之间的连接意外中断，服务器将发布客户端的“遗嘱”消息
     private static final byte[] WILL_DATA;
@@ -64,7 +65,7 @@ public class MqttConfig {
     @PostConstruct
     public void init() {
         String ipStr = NetUtil.getLocalhostStr();
-        if(!StrUtil.isEmpty(ipStr)){
+        if (!StrUtil.isEmpty(ipStr)) {
             this.clientId = String.valueOf(NetUtil.ipv4ToLong(ipStr));
         }
         log.info("username:{} password:{} serverURIs:{} clientId :{} topic:{} qos:{} subList:{}",
@@ -173,37 +174,5 @@ public class MqttConfig {
         // 设置订阅通道
         adapter.setOutputChannel(mqttInboundChannel());
         return adapter;
-    }
-
-    /**
-     * MQTT消息处理器（消费者）
-     *
-     * @param
-     * @return org.springframework.messaging.MessageHandler
-     * @author yw
-     * @date 2022-01-18 20:46:06
-     */
-    @Bean
-    @ServiceActivator(inputChannel = CHANNEL_NAME_IN)
-    public MessageHandler handler() {
-
-        return message -> {
-            String topic = message.getHeaders().get("mqtt_receivedTopic").toString();
-            String msg = message.getPayload().toString();
-            for (String t : subList) {
-                if (t.equals(topic)) {
-                    try {
-//                        mqttLogicService.doBusiness(topic, msg);
-                        //todo 处理相关的业务逻辑
-                    /*log.info("\n--------------------START-------------------\n" +
-                            "接收到订阅消息:\ntopic:" + topic + "\nmessage:" + msg +
-                            "\n---------------------END--------------------");*/
-                    } catch (Exception e) {
-                        log.error("doBusiness异常：", e);
-                    }
-
-                }
-            }
-        };
     }
 }
