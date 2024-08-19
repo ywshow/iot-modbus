@@ -1,5 +1,6 @@
 package com.takeoff.iot.modbus.test.config;
 
+import com.takeoff.iot.modbus.serialport.service.SerialPortNewService;
 import com.takeoff.iot.modbus.serialport.service.SerialportService;
 import com.takeoff.iot.modbus.test.properties.IotModbusSerialportProperties;
 import lombok.extern.slf4j.Slf4j;
@@ -22,15 +23,15 @@ public class IotModbusSerialportConfig implements ApplicationRunner {
     private IotModbusSerialportProperties iotModbusSerialportProperties;
 
     @Resource
-    private SerialportService serialportService;
+    private SerialPortNewService serialPortNewService;
 
     @Override
     public void run(ApplicationArguments args) throws Exception {
         if(iotModbusSerialportProperties.getOpen()){
             if(iotModbusSerialportProperties.getNetty()){
-                serialportService.openComPort(iotModbusSerialportProperties.getPort(), iotModbusSerialportProperties.getBaudrate(), iotModbusSerialportProperties.getThread());
+                serialPortNewService.openComPort(iotModbusSerialportProperties.getPort(), iotModbusSerialportProperties.getBaudrate(), iotModbusSerialportProperties.getThread());
             }else{
-                serialportService.openComPort(iotModbusSerialportProperties.getPort(), iotModbusSerialportProperties.getBaudrate(), iotModbusSerialportProperties.getTimeout(), iotModbusSerialportProperties.getThread(), iotModbusSerialportProperties.getSleepTime());
+                serialPortNewService.openComPort(iotModbusSerialportProperties.getPort(), iotModbusSerialportProperties.getBaudrate(), iotModbusSerialportProperties.getTimeout(), iotModbusSerialportProperties.getThread(), iotModbusSerialportProperties.getSleepTime());
             }
         }
     }

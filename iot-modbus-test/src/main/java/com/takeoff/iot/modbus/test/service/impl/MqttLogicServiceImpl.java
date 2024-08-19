@@ -77,8 +77,7 @@ public class MqttLogicServiceImpl implements MqttLogicService {
             throw new UtilException("每份重量为空");
         }
         String ipStr = NetUtil.getLocalhostStr();
-        String ipOfLongStr = String.valueOf(NetUtil.ipv4ToLong(ipStr));
-        paramInfo.setTag(ipOfLongStr);
+        paramInfo.setTag(ipStr);
         mqttService.sendToMqtt(paramInfo.getTopic(), JSON.toJSONString(paramInfo));
     }
 
@@ -92,7 +91,12 @@ public class MqttLogicServiceImpl implements MqttLogicService {
     public void sortWeightPrinter(String topic, String msg) throws Exception {
         String ipStr = NetUtil.getLocalhostStr();
         String ipOfLongStr = String.valueOf(NetUtil.ipv4ToLong(ipStr));
+        log.error("本地IP：{}", ipStr);
+        log.error("本地转换：{}", ipOfLongStr);
+
         Param param = JSON.parseObject(msg, Param.class);
+
+        log.error("远程IP转换{}", NetUtil.ipv4ToLong(param.getTag()));
         //WMS传入IP，根据IP作为tag校验哪个电脑的称
         if (!StrUtil.isEmpty(param.getTag()) && ipOfLongStr.equals(String.valueOf(NetUtil.ipv4ToLong(param.getTag())))) {
             if (param.getData() != null) {

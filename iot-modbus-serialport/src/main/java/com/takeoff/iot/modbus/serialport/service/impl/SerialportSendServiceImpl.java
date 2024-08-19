@@ -9,6 +9,7 @@ import com.takeoff.iot.modbus.common.message.factory.MiiMessageFactory;
 import com.takeoff.iot.modbus.common.message.factory.MiiOutMessageFactory;
 import com.takeoff.iot.modbus.common.utils.IntegerToByteUtil;
 import com.takeoff.iot.modbus.common.utils.JudgeEmptyUtils;
+import com.takeoff.iot.modbus.serialport.service.SerialPortNewService;
 import com.takeoff.iot.modbus.serialport.service.SerialportSendService;
 import com.takeoff.iot.modbus.serialport.service.SerialportService;
 import lombok.extern.slf4j.Slf4j;
@@ -30,7 +31,7 @@ import java.util.List;
 public class SerialportSendServiceImpl implements SerialportSendService {
 
     @Resource
-    private SerialportService serialportService;
+    private SerialPortNewService serialPortNewService;
 
     private static final MiiBytesFactory<Integer> BYTESFACTORY_SLOT = new MiiSlotBytesFactory();
 
@@ -89,7 +90,7 @@ public class SerialportSendServiceImpl implements SerialportSendService {
     private <E> void sendMessage(MiiMessageFactory<E> factory, String deviceGroup, E... datas){
         MiiMessage message = factory.buildMessage(deviceGroup, datas);
         log.info("待下发指令数据："+ Hex.toHexString(message.toBytes()));
-        serialportService.serialportSendData(message.toBytes());
+        serialPortNewService.serialPortSendData(message.toBytes());
     }
 
 

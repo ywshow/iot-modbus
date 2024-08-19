@@ -18,6 +18,7 @@
         <iot-modbus-common.version>3.2.9-SNAPSHOT</iot-modbus-common.version>
         <guava.version>18.0</guava.version>
         <netty.version>4.1.39.Final</netty.version>
+        <jSerialComm.version>2.11.0</jSerialComm.version>
     </properties>
 
     <dependencies>
@@ -29,10 +30,15 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
         </dependency>
-        <dependency>
+        <!--<dependency>
             <groupId>org.bidib.jbidib.org.qbang.rxtx</groupId>
             <artifactId>rxtxcomm</artifactId>
             <version>${rxtxcomm.version}</version>
+        </dependency>-->
+        <dependency>
+            <groupId>com.fazecast</groupId>
+            <artifactId>jSerialComm</artifactId>
+            <version>${jSerialComm.version}</version>
         </dependency>
         <dependency>
             <groupId>com.takeoff.iot</groupId>

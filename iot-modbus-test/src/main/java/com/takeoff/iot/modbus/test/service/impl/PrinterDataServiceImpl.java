@@ -32,19 +32,19 @@ import java.util.List;
 public class PrinterDataServiceImpl implements PrinterDataService {
 
     //Y轴偏移量
-    private final int offset = 30;
+    private final int offset = 40;
 
     //Y轴偏移量
-    private final int offsetSecond_y = 35;
+    private final int offsetSecond_y = 40;
 
     //X轴偏移量
-    private final int offsetSecond_x = 20;
+    private final int offsetSecond_x = 30;
 
     //垂直下移
-    private final int offsetSecondConstant_Y = 50;
+    private final int offsetSecondConstant_Y = 40;
 
     //每行打印的内容长度
-    private final BigDecimal rowOfNumber = BigDecimal.valueOf(13);
+    private final BigDecimal rowOfNumber = BigDecimal.valueOf(12);
 
     /**
      * 根据打印机实际的PID VID进行打印,可以在设备管理器 打印支持 查看
@@ -128,7 +128,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
             throw new UtilException("参数为空");
         }
 
-        log.error("称重标签打印：{}", JSON.toJSONString(tbsData));
+//        log.error("称重标签打印：{}", JSON.toJSONString(tbsData));
 
         //写入打印机的model内容
         if (StrUtil.hasEmpty(tbsData.getGoodsName(), tbsData.getQrCode(), tbsData.getUserName(), tbsData.getPhone(), tbsData.getGoodsCode())) {
@@ -140,11 +140,13 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         if (tbsData.getPerWeight() == null) {
             throw new UtilException("每份重量为空");
         }
+        log.error("称重标签打印：{}", 1);
 //        tbsData.setWeight(tbsData.getWeight().divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP));
         tbsData.setPrice(tbsData.getPrice().setScale(2, RoundingMode.HALF_UP));
         tbsData.setQrCode(tbsData.getUrl().concat(tbsData.getQrCode()));
         //展示为包装日期
         tbsData.setPickUpTime(new Date());
+        log.error("称重标签打印：{}", 2);
         if (StrUtil.isEmpty(tbsData.getProvenance())) {
             tbsData.setProvenance("");
         } else {
@@ -153,26 +155,28 @@ public class PrinterDataServiceImpl implements PrinterDataService {
                 tbsData.setProvenance(provenance);
             }
         }
-
+        log.error("称重标签打印：{}", 3);
         //电话脱敏
         tbsData.setPhone(DesensitizedUtil.mobilePhone(tbsData.getPhone()));
 
-        File file = FileUtil.file("img/test.jpg");
-        ImgUtil.gray(FileUtil.file("img/lvy-logo.jpg"), file);
-
+        File file = FileUtil.file("img/LOGO.JPG");
+//        ImgUtil.gray(FileUtil.file("img/lvy-logo.jpg"), file);
+        log.error("称重标签打印：{}", 4);
         //扫描USB端口
         List<Printer> list = PrinterUtils.PrinterScan();
         if (list == null || list.isEmpty()) {
             throw new UtilException("usb未检测到打印机设备");
         }
-
+        log.error("称重标签打印：{}", 5);
         Printer printer = PrinterUtils.PrinterOpen(list.get(0));
 
 //        versionFirst(tbsData, printer);
 
         //标品不打印，非标品重量跟销售重量一样不打印
-        if(tbsData.getStandard() == 0){
-            if (tbsData.getWeight().divide(BigDecimal.valueOf(tbsData.getQuantity()), 0, RoundingMode.HALF_UP).compareTo(tbsData.getPerWeight()) != 0){
+        if (tbsData.getStandard() == 0) {
+            log.error("称重标签打印：{}", 6);
+            if (tbsData.getWeight().divide(BigDecimal.valueOf(tbsData.getQuantity()), 0, RoundingMode.HALF_UP).compareTo(tbsData.getPerWeight()) != 0) {
+                log.error("称重标签打印：{}", 7);
                 versionSecond(tbsData, printer, file);
             }
         }
@@ -357,7 +361,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
      * @author yw
      * @date 2021-07-20 09:10:23
      */
-    public PrinterData versionSecond(PrinterData tbsData, Printer printer, File file) throws Exception {
+    public synchronized PrinterData versionSecond(PrinterData tbsData, Printer printer, File file) throws Exception {
 
         //纸张大小
         String size = "SIZE 50 mm,40 mm\r\n";
@@ -423,11 +427,15 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         //用户
         int nameLength = tbsData.getUserName().length();
         String dataStr = "";
-        if (nameLength >= 13) {
-            dataStr = tbsData.getUserName().substring(0, 14);
+        if (nameLength > rowOfNumber.intValue()) {
+            dataStr = tbsData.getUserName().substring(0, rowOfNumber.intValue() + 1);
         } else {
             dataStr = tbsData.getUserName();
         }
+        if (num > 1) {
+            num = 2;
+        }
+
         String date = "TEXT " + offsetSecond_x + "," + ((num + 1) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"用户：" + dataStr + "\"\r\n";
         PrinterUtils.PrinterWrite(printer, date.getBytes("GBK"), date.getBytes("GBK").length);
 

@@ -8,7 +8,6 @@ import com.takeoff.iot.modbus.common.utils.JudgeEmptyUtils;
 import com.takeoff.iot.modbus.serialport.service.SerialportSendService;
 import com.takeoff.iot.modbus.test.config.IotModbusClientConfig;
 import com.takeoff.iot.modbus.test.config.IotModbusServerConfig;
-import com.takeoff.iot.modbus.test.properties.IotModbusClientProperties;
 import com.takeoff.iot.modbus.test.properties.IotModbusSerialportProperties;
 import com.takeoff.iot.modbus.test.utils.R;
 import lombok.extern.slf4j.Slf4j;
@@ -45,15 +44,16 @@ public class TestController {
 
     /**
      * 发送控制单锁指令
+     *
      * @param deviceGroup（串口通信为：柜体组编码；网口通信为：设备IP）
      * @param device
      * @return
      */
     @RequestMapping("/openlock/{deviceGroup}/{device}")
     public R openLock(@PathVariable("deviceGroup") String deviceGroup, @PathVariable("device") Integer device) {
-        if(iotModbusSerialportProperties.getOpen()){
+        if (iotModbusSerialportProperties.getOpen()) {
             serialportSendService.unlock(deviceGroup, device);
-        }else{
+        } else {
             iotModbusServerConfig.getMiiServer().sender().unlock(deviceGroup, device);
         }
         return R.ok();
@@ -61,17 +61,18 @@ public class TestController {
 
     /**
      * 发送控制多开锁指令
+     *
      * @param map （deviceGroup 串口通信为：柜体组编码；网口通信为：设备IP）
      * @return
      */
     @RequestMapping("/openmultilock")
     public R openMultiLock(@RequestBody Map map) {
-        if(iotModbusSerialportProperties.getOpen()){
+        if (iotModbusSerialportProperties.getOpen()) {
             serialportSendService.unlock(
                     map.get("deviceGroup").toString(), Integer.valueOf(map.get("device").toString()),
                     Integer.valueOf(map.get("lockNo1").toString()), Integer.valueOf(map.get("lockStatus1").toString()),
                     Integer.valueOf(map.get("lockNo2").toString()), Integer.valueOf(map.get("lockStatus2").toString()));
-        }else{
+        } else {
             iotModbusServerConfig.getMiiServer().sender().unlock(
                     map.get("deviceGroup").toString(), Integer.valueOf(map.get("device").toString()),
                     Integer.valueOf(map.get("lockNo1").toString()), Integer.valueOf(map.get("lockStatus1").toString()),
@@ -82,15 +83,16 @@ public class TestController {
 
     /**
      * 发送设置扫码模式指令
+     *
      * @param deviceGroup （串口通信为：柜体组编码；网口通信为：设备IP）
      * @param device
      * @return
      */
     @RequestMapping("/barcode/{deviceGroup}/{device}")
     public R barcode(@PathVariable("deviceGroup") String deviceGroup, @PathVariable("device") Integer device) {
-        if(iotModbusSerialportProperties.getOpen()){
+        if (iotModbusSerialportProperties.getOpen()) {
             serialportSendService.barcode(deviceGroup, device, MiiData.ONCE);
-        }else{
+        } else {
             iotModbusServerConfig.getMiiServer().sender().backlight(deviceGroup, device, MiiData.ONCE);
         }
         return R.ok();
@@ -98,15 +100,16 @@ public class TestController {
 
     /**
      * 发送背光灯指令
+     *
      * @param deviceGroup （串口通信为：柜体组编码；网口通信为：设备IP）
      * @param device
      * @return
      */
     @RequestMapping("/backlight/{deviceGroup}/{device}")
     public R backLight(@PathVariable("deviceGroup") String deviceGroup, @PathVariable("device") Integer device) {
-        if(iotModbusSerialportProperties.getOpen()){
+        if (iotModbusSerialportProperties.getOpen()) {
             serialportSendService.backlight(deviceGroup, device, MiiData.ON);
-        }else{
+        } else {
             iotModbusServerConfig.getMiiServer().sender().backlight(deviceGroup, device, MiiData.ON);
         }
         return R.ok();
@@ -114,6 +117,7 @@ public class TestController {
 
     /**
      * 指静脉注册
+     *
      * @param deviceGroup （串口通信为：柜体组编码；网口通信为：设备IP）
      * @param cabinet
      * @param fingerId
@@ -121,9 +125,9 @@ public class TestController {
      */
     @RequestMapping("/registerfinger/{deviceGroup}/{cabinet}/{fingerId}")
     public R registerfinger(@PathVariable("deviceGroup") String deviceGroup, @PathVariable("cabinet") Integer cabinet, @PathVariable("fingerId") Integer fingerId) {
-        if(iotModbusSerialportProperties.getOpen()){
+        if (iotModbusSerialportProperties.getOpen()) {
             serialportSendService.registerFinger(deviceGroup, cabinet, fingerId);
-        }else{
+        } else {
             iotModbusServerConfig.getMiiServer().sender().registerFinger(deviceGroup, cabinet, fingerId);
         }
         return R.ok();
@@ -131,14 +135,15 @@ public class TestController {
 
     /**
      * 批量发送lCD控制指令
+     *
      * @param lcdDataList
      * @return
      */
     @RequestMapping("/lcdbatch")
     public R lcdBatch(@RequestBody List<LcdData> lcdDataList) {
-        if(iotModbusSerialportProperties.getOpen()){
+        if (iotModbusSerialportProperties.getOpen()) {
             serialportSendService.lcdBatch(lcdDataList);
-        }else{
+        } else {
             iotModbusServerConfig.getMiiServer().sender().lcdBatch(lcdDataList);
         }
         return R.ok();
@@ -146,26 +151,28 @@ public class TestController {
 
     /**
      * 发送三色报警灯指令
+     *
      * @param alarmLampData
      * @return
      */
     @RequestMapping("/alarmlamp")
     public void alarmLamp(@RequestBody AlarmLampData alarmLampData) {
-        if(iotModbusSerialportProperties.getOpen()){
+        if (iotModbusSerialportProperties.getOpen()) {
             serialportSendService.alarmLamp(alarmLampData);
-        }else{
+        } else {
             iotModbusServerConfig.getMiiServer().sender().alarmLamp(alarmLampData);
         }
     }
 
     /**
      * 测试客户端往多个服务端下发消息
+     *
      * @param openLockList
      */
     @RequestMapping("/clienttest")
     public void clientTest(@RequestBody List<OpenLock> openLockList) {
-        if(!JudgeEmptyUtils.isEmpty(openLockList)){
-            for (OpenLock openLock : openLockList){
+        if (!JudgeEmptyUtils.isEmpty(openLockList)) {
+            for (OpenLock openLock : openLockList) {
                 iotModbusClientConfig.getMiiClient().sender().unlock(openLock.getIp(), openLock.getDevice(), openLock.getStatus());
             }
         }
