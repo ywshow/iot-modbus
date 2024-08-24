@@ -1,0 +1,30 @@
+# Tomcat
+server:
+  port: 8081
+  tomcat:
+    uri-encoding: UTF-8
+    max-threads: 1000
+    min-spare-threads: 30
+  servlet:
+    context-path: /printer
+mqtt:
+  serverURIs: tcp://hczn-emqx:1883
+  #serverURIs: tcp://192.168.0.109:1883
+  username: admin
+  password: lvyuan!
+  qos: 2
+  client:
+    #伺候id改为获取本机ip
+    id: client_weight
+  # 默认主题
+  topic: receipt_topic
+  subList:
+    - receipt_topic
+mqtt-info:
+  subList:
+    - receipt_topic
+xp:
+  dev:
+    domain: https://open.xpyun.net
+    user: 576307322@qq.com
+    user-key: 924c9d2aa74948eb8d653f0ce5cbcd13

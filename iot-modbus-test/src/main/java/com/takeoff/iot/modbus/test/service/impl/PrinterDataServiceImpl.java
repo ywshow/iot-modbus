@@ -1,5 +1,6 @@
 package com.takeoff.iot.modbus.test.service.impl;
 
+import cn.hutool.core.collection.ListUtil;
 import cn.hutool.core.date.DateUtil;
 import cn.hutool.core.exceptions.UtilException;
 import cn.hutool.core.img.ImgUtil;
@@ -10,6 +11,7 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.takeoff.iot.modbus.common.entity.Printer;
 import com.takeoff.iot.modbus.common.entity.PrinterData;
+import com.takeoff.iot.modbus.common.entity.ShoppingList;
 import com.takeoff.iot.modbus.common.entity.StockInDto;
 import com.takeoff.iot.modbus.test.service.PrinterDataService;
 import com.takeoff.iot.modbus.test.utils.PrinterUtils;
@@ -24,8 +26,10 @@ import java.awt.image.PixelGrabber;
 import java.io.File;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.util.Comparator;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 @Service
 @Slf4j
@@ -38,13 +42,19 @@ public class PrinterDataServiceImpl implements PrinterDataService {
     private final int offsetSecond_y = 40;
 
     //X轴偏移量
-    private final int offsetSecond_x = 30;
+    private final int offsetSecond_x = 25;
 
     //垂直下移
     private final int offsetSecondConstant_Y = 40;
 
     //每行打印的内容长度
     private final BigDecimal rowOfNumber = BigDecimal.valueOf(12);
+
+    //标签序号
+    private int pageNum = 0;
+
+    //每张标签默认打印商品数量
+    private int printerNumber = 8;
 
     /**
      * 根据打印机实际的PID VID进行打印,可以在设备管理器 打印支持 查看
@@ -112,7 +122,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
     }
 
     @Override
-    public PrinterData tracingBackToTheSource(PrinterData tbsData) throws Exception {
+    public synchronized PrinterData<ShoppingList> tracingBackToTheSource(PrinterData<ShoppingList> tbsData) throws Exception {
 
         if (tbsData == null) {
             /*TbsData tbsDataTmp = new TbsData();
@@ -128,7 +138,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
             throw new UtilException("参数为空");
         }
 
-//        log.error("称重标签打印：{}", JSON.toJSONString(tbsData));
+        log.error("称重标签打印：{}", JSON.toJSONString(tbsData));
 
         //写入打印机的model内容
         if (StrUtil.hasEmpty(tbsData.getGoodsName(), tbsData.getQrCode(), tbsData.getUserName(), tbsData.getPhone(), tbsData.getGoodsCode())) {
@@ -140,13 +150,11 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         if (tbsData.getPerWeight() == null) {
             throw new UtilException("每份重量为空");
         }
-        log.error("称重标签打印：{}", 1);
 //        tbsData.setWeight(tbsData.getWeight().divide(BigDecimal.valueOf(2), 2, RoundingMode.HALF_UP));
         tbsData.setPrice(tbsData.getPrice().setScale(2, RoundingMode.HALF_UP));
         tbsData.setQrCode(tbsData.getUrl().concat(tbsData.getQrCode()));
         //展示为包装日期
         tbsData.setPickUpTime(new Date());
-        log.error("称重标签打印：{}", 2);
         if (StrUtil.isEmpty(tbsData.getProvenance())) {
             tbsData.setProvenance("");
         } else {
@@ -155,28 +163,28 @@ public class PrinterDataServiceImpl implements PrinterDataService {
                 tbsData.setProvenance(provenance);
             }
         }
-        log.error("称重标签打印：{}", 3);
         //电话脱敏
         tbsData.setPhone(DesensitizedUtil.mobilePhone(tbsData.getPhone()));
+        pageNum = 0;
+        tracingBackToTheSourceInfo(tbsData);
+        return tbsData;
+    }
 
+    public void tracingBackToTheSourceInfo(PrinterData<ShoppingList> tbsData) throws Exception {
         File file = FileUtil.file("img/LOGO.JPG");
 //        ImgUtil.gray(FileUtil.file("img/lvy-logo.jpg"), file);
-        log.error("称重标签打印：{}", 4);
         //扫描USB端口
         List<Printer> list = PrinterUtils.PrinterScan();
-        if (list == null || list.isEmpty()) {
+        if (list.isEmpty()) {
             throw new UtilException("usb未检测到打印机设备");
         }
-        log.error("称重标签打印：{}", 5);
         Printer printer = PrinterUtils.PrinterOpen(list.get(0));
 
 //        versionFirst(tbsData, printer);
 
         //标品不打印，非标品重量跟销售重量一样不打印
         if (tbsData.getStandard() == 0) {
-            log.error("称重标签打印：{}", 6);
             if (tbsData.getWeight().divide(BigDecimal.valueOf(tbsData.getQuantity()), 0, RoundingMode.HALF_UP).compareTo(tbsData.getPerWeight()) != 0) {
-                log.error("称重标签打印：{}", 7);
                 versionSecond(tbsData, printer, file);
             }
         }
@@ -184,7 +192,6 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         /*if (tbsData.getWeight().divide(BigDecimal.valueOf(tbsData.getQuantity()), 0, RoundingMode.HALF_UP).compareTo(tbsData.getPerWeight()) != 0) {
             versionSecond(tbsData, printer, file);
         }*/
-        return tbsData;
     }
 
     @Override
@@ -361,7 +368,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
      * @author yw
      * @date 2021-07-20 09:10:23
      */
-    public synchronized PrinterData versionSecond(PrinterData tbsData, Printer printer, File file) throws Exception {
+    public synchronized void versionSecond(PrinterData<ShoppingList> tbsData, Printer printer, File file) throws Exception {
 
         //纸张大小
         String size = "SIZE 50 mm,40 mm\r\n";
@@ -378,8 +385,25 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         PrinterUtils.PrinterWrite(printer, img.getBytes("GBK"), img.getBytes("GBK").length);
 
         log.info("商品长度：{}", tbsData.getGoodsName().length());
-        BigDecimal goodsLength = BigDecimal.valueOf(tbsData.getGoodsName().length());
-        int num = goodsLength.divide(rowOfNumber, 0, RoundingMode.DOWN).intValue();
+
+        int num = 0;
+        BigDecimal goodsLength = BigDecimal.ZERO;
+        if (tbsData.isShoppingList()) {
+            shoppingList(tbsData, goodsLength, printer, num);
+        } else {
+            goodsLength = BigDecimal.valueOf(tbsData.getGoodsName().length());
+            num = goodsNamePrinterLineNum(goodsLength, false, null);
+            sortWeightPrinter(tbsData, goodsLength, printer, num);
+        }
+    }
+
+    private int goodsNamePrinterLineNum(BigDecimal goodsLength, boolean shoppingList, BigDecimal listRowOfNumber) {
+        int num;
+        if (shoppingList) {
+            num = goodsLength.divide(listRowOfNumber, 0, RoundingMode.DOWN).intValue();
+        } else {
+            num = goodsLength.divide(rowOfNumber, 0, RoundingMode.DOWN).intValue();
+        }
         log.info("num：{}", num);
         BigDecimal remainder = goodsLength.remainder(rowOfNumber);
         log.info("remainder：{}", remainder);
@@ -387,6 +411,116 @@ public class PrinterDataServiceImpl implements PrinterDataService {
             num = num + 1;
         }
         log.info("new:{}", num);
+        return num;
+    }
+
+
+    /**
+     * @Description 购物清单打印
+     * @Param
+     * @Author yw
+     * @Date 2024/8/20 9:25
+     * @Return
+     **/
+    public void shoppingList(PrinterData<ShoppingList> tbsData, BigDecimal goodsLength, Printer printer, int num) throws Exception {
+        if (tbsData.getList() != null && !tbsData.getList().isEmpty()) {
+            BigDecimal listRowOfNumber = rowOfNumber.add(BigDecimal.valueOf(4));
+            List<ShoppingList> list = JSON.parseArray(JSON.toJSONString(tbsData.getList()), ShoppingList.class);
+            if (!list.isEmpty()) {
+                log.error("购物清单:{}", JSON.toJSONString(list));
+                int nameLength = tbsData.getUserName().length();
+                String dataStr;
+                if (nameLength > listRowOfNumber.intValue()) {
+                    dataStr = tbsData.getUserName().substring(0, listRowOfNumber.intValue() + 1);
+                } else {
+                    dataStr = tbsData.getUserName();
+                }
+                //固定打印行数
+                int initNum = 3;
+                //非第一张，不打印一下信息，只打印购买的物品列表
+                if (!tbsData.isNextPagePrinter()) {
+                    String date = "TEXT " + offsetSecond_x + "," + (offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"用户：" + dataStr + "\"\r\n";
+                    PrinterUtils.PrinterWrite(printer, date.getBytes("GBK"), date.getBytes("GBK").length);
+
+                    //电话
+                    String provenance = "TEXT " + offsetSecond_x + "," + (2 * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"电话：" + tbsData.getPhone() + "\"\r\n";
+                    PrinterUtils.PrinterWrite(printer, provenance.getBytes("GBK"), provenance.getBytes("GBK").length);
+
+                    String shoppingName = "购物清单";
+                    String shopping = "TEXT " + (offsetSecond_x * 6) + "," + (3 * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,2,\"" + shoppingName + "\"\r\n";
+                    PrinterUtils.PrinterWrite(printer, shopping.getBytes("GBK"), shopping.getBytes("GBK").length);
+                }
+
+                /*商品循环打印**/
+//                initNum = initNum + 2;
+                List<ShoppingList> listSort = list.stream().sorted(Comparator.comparing(ShoppingList::getName).reversed()).collect(Collectors.toList());
+                int nextLength = 0;
+                for (int i = 0; i < list.size(); i++) {
+                    ShoppingList shoppingList = list.get(i);
+                    //String content = (i + 1) + "、" + shoppingList.getName();
+                    String content = (pageNum + 1) + "、" + shoppingList.getName() + "（" + shoppingList.getPerWeight() + "/份 * " + shoppingList.getNum() + "）";
+                    goodsLength = BigDecimal.valueOf(content.length());
+                    if (goodsLength.compareTo(listRowOfNumber) <= 0) {
+                        initNum = initNum + 1;
+                        String name = "TEXT " + offsetSecond_x + "," + (initNum * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"" + content + "\"\r\n";
+                        PrinterUtils.PrinterWrite(printer, name.getBytes("GBK"), name.getBytes("GBK").length);
+                        //第一张纸，且第二个商品也是刚好一行，则换纸打印（第一张纸只能放两个不换行的商品）
+                        if (i == 2 && !tbsData.isNextPagePrinter()) {
+                            break;
+                        }
+                        nextLength = nextLength + i + 1;
+                    } else {
+                        //第一张纸，且第一个商品超过一行，则换纸打印（第一张纸只能放两个不换行的商品）
+                        if (i == 1 && !tbsData.isNextPagePrinter()) {
+                            break;
+                        }
+                        nextLength = nextLength + i + 1;
+                        num = goodsNamePrinterLineNum(goodsLength, true, listRowOfNumber);
+                        initNum = initNum + 1;
+                        int index = 0;
+                        for (int j = 0; j < num; j++) {
+                            String subStr;
+                            int numIndex = j + 1;
+                            int nextIndex = BigDecimal.valueOf(numIndex).multiply(listRowOfNumber).intValue();
+                            if (goodsLength.compareTo(BigDecimal.valueOf(numIndex).multiply(listRowOfNumber)) > 0) {
+                                //下一个未结束，则继续
+                                subStr = content.substring(index, nextIndex);
+                            } else {
+                                //下一个index已结束，则用商品长度截取
+                                subStr = content.substring(index, goodsLength.intValue());
+                            }
+                            index = nextIndex;
+                            if (!tbsData.isNextPagePrinter()) {
+                                numIndex = initNum + numIndex;
+                            }
+                            //商品
+                            String text = "TEXT " + offsetSecond_x + "," + (numIndex * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"" + subStr + "\"\r\n";
+                            PrinterUtils.PrinterWrite(printer, text.getBytes("GBK"), text.getBytes("GBK").length);
+                        }
+                    }
+                }
+                String print = "PRINT 1\r\n";
+                PrinterUtils.PrinterWrite(printer, print.getBytes("GBK"), print.getBytes("GBK").length);
+                if (nextLength < list.size()) {
+                    pageNum = nextLength;
+                    List<ShoppingList> listNew = ListUtil.sub(list, nextLength + 1, list.size());
+                    tbsData.setList(listNew);
+                    //一张标签纸没打完则继续打印
+                    tbsData.setNextPagePrinter(true);
+                    tracingBackToTheSourceInfo(tbsData);
+                }
+            }
+        }
+    }
+
+    /**
+     * @Description 分拣称重打印
+     * @Param
+     * @Author yw
+     * @Date 2024/8/20 9:17
+     * @Return
+     **/
+    public void sortWeightPrinter(PrinterData<ShoppingList> tbsData, BigDecimal goodsLength, Printer printer, int num) throws Exception {
         /*只能是两行的商品名称，再多的话，因为第一行会多出“品名：”，商行以上的话，换行不准确，暂时只保留两行，太长容不下**/
         if (goodsLength.compareTo(rowOfNumber) <= 0) {
             //商品
@@ -420,7 +554,6 @@ public class PrinterDataServiceImpl implements PrinterDataService {
                     String text = "TEXT " + offsetSecond_x + "," + (numIndex * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"商品：" + subStr + "\"\r\n";
                     PrinterUtils.PrinterWrite(printer, text.getBytes("GBK"), text.getBytes("GBK").length);
                 }
-
             }
         }
 
@@ -473,7 +606,6 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         String print = "PRINT 1\r\n";
         PrinterUtils.PrinterWrite(printer, print.getBytes("GBK"), print.getBytes("GBK").length);
         //        checkPrinterStatus(printer);
-        return tbsData;
     }
 
     /**

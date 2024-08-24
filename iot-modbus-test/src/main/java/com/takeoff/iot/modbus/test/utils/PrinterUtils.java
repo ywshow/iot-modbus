@@ -75,9 +75,7 @@ public class PrinterUtils {
     public static List<Printer> PrinterScan() {
         byte[] buffer = new byte[1024 * 10];
         List<Printer> printerList = new LinkedList<>();
-        log.error("称重标签打印：{}", 4.0);
         PrinterDllService.comm.UsbScan(buffer, 1024);
-        log.error("称重标签打印：{}", 4.1);
         for (int index = 0; index < 1024 * 10; index += INFO_SIZE) {
             StringBuilder sb = new StringBuilder();
             Printer printer = new Printer();
@@ -125,7 +123,6 @@ public class PrinterUtils {
             printer.setSerialNum(sb.toString());
             printerList.add(printer);
         }
-        log.error("称重标签打印：{}", 4.2);
         return printerList;
     }
 

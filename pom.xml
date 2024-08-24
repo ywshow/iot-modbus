@@ -90,5 +90,6 @@
 		<module>iot-modbus-client</module>
 		<module>iot-modbus-serialport</module>
         <module>iot-modbus-test</module>
-  </modules>
+        <module>xp-cloud-printer</module>
+    </modules>
 </project>

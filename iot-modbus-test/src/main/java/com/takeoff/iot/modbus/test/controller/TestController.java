@@ -1,5 +1,9 @@
 package com.takeoff.iot.modbus.test.controller;
 
+import cn.hutool.core.util.RandomUtil;
+import cn.hutool.crypto.asymmetric.SM2;
+import cn.hutool.crypto.digest.SM3;
+import cn.hutool.crypto.symmetric.SM4;
 import com.takeoff.iot.modbus.client.entity.OpenLock;
 import com.takeoff.iot.modbus.common.data.MiiData;
 import com.takeoff.iot.modbus.common.entity.AlarmLampData;
@@ -176,6 +180,26 @@ public class TestController {
                 iotModbusClientConfig.getMiiClient().sender().unlock(openLock.getIp(), openLock.getDevice(), openLock.getStatus());
             }
         }
+    }
+
+    public static void main(String[] args) {
+
+        SM2 sm2 = new SM2();
+        System.out.println(sm2.getPrivateKey());
+        System.out.println(sm2.getPublicKey());
+
+        SM3 sm3 = new SM3();
+        System.out.println(sm3.digestHex("1123"));
+
+        String random = RandomUtil.randomString(16);
+        System.out.println("random:" + random);
+        SM4 sm4 = new SM4(random.getBytes());
+        String smTest = sm4.encryptHex("1iqwe22i".getBytes());
+        System.out.println(smTest);
+        String strByte = sm4.decryptStr(smTest);
+        System.out.println(strByte);
+        SM4 sm41 = new SM4(random.getBytes());
+        System.out.println(sm41.decryptStr(smTest));
     }
 
 }

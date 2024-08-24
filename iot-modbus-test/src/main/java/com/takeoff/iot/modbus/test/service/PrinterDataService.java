@@ -1,6 +1,7 @@
 package com.takeoff.iot.modbus.test.service;
 
 import com.takeoff.iot.modbus.common.entity.PrinterData;
+import com.takeoff.iot.modbus.common.entity.ShoppingList;
 
 import java.io.File;
 
@@ -39,7 +40,7 @@ public interface PrinterDataService {
      */
     void printerByRandom(String command) throws Exception;
 
-    PrinterData tracingBackToTheSource(PrinterData tbsData) throws Exception;
+    PrinterData<ShoppingList> tracingBackToTheSource(PrinterData<ShoppingList> tbsData) throws Exception;
 
     void printerImg() throws Exception;
 

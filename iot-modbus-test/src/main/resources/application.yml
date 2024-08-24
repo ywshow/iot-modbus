@@ -53,3 +53,8 @@ mqtt-info:
   subList:
     - topic_default
     - sort_weight_topic
+xp:
+  dev:
+    domain: https://open.xpyun.net
+    user: 576307322@qq.com
+    user-key: 924c9d2aa74948eb8d653f0ce5cbcd13
