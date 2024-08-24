@@ -65,7 +65,8 @@ public class XPrinterServiceImpl implements XPrinterService {
         content.append("地址：珠海市香洲区xx路xx号<BR>");
         content.append("</L>");
         content.append("<QRCODE s=8 e=L l=center>http://www.xpyun.net</QRCODE><BR>");
-        return null;
+        restRequest.setContent(content.toString());
+        return iXpyunPrintService.print(restRequest);
     }
 
     /**
@@ -89,7 +90,7 @@ public class XPrinterServiceImpl implements XPrinterService {
         restRequest.setMode(1);
         restRequest.setExpiresIn(7200);
 
-        return null;
+        return iXpyunPrintService.printLabel(restRequest);
     }
 
     /**
@@ -104,7 +105,7 @@ public class XPrinterServiceImpl implements XPrinterService {
         if (restRequest == null) {
             restRequest = new DelPrinterRequest();
         }
-        return null;
+        return iXpyunPrintService.delPrinters(restRequest);
     }
 
     /**
@@ -119,7 +120,7 @@ public class XPrinterServiceImpl implements XPrinterService {
         if (restRequest == null) {
             restRequest = new ClearPrintOrderRequest();
         }
-        return null;
+        return iXpyunPrintService.delPrinterQueue(restRequest);
     }
 
     /**
@@ -134,7 +135,7 @@ public class XPrinterServiceImpl implements XPrinterService {
         if (restRequest == null) {
             restRequest = new PrintersRequest();
         }
-        return null;
+        return iXpyunPrintService.queryPrintersStatus(restRequest);
     }
 
     /**
@@ -149,7 +150,7 @@ public class XPrinterServiceImpl implements XPrinterService {
         if (restRequest == null) {
             restRequest = new SetVoiceTypeRequest();
         }
-        return null;
+        return iXpyunPrintService.setPrinterVoiceType(restRequest);
     }
 
     /**
@@ -164,6 +165,6 @@ public class XPrinterServiceImpl implements XPrinterService {
         if (restRequest == null) {
             restRequest = new AddPrinterRequest();
         }
-        return null;
+        return iXpyunPrintService.addPrinters(restRequest);
     }
 }
