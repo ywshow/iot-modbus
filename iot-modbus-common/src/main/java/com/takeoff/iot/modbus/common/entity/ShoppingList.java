@@ -38,6 +38,11 @@ public class ShoppingList {
     private BigDecimal perWeight;
 
     /**
+     * 总重量
+     */
+    private BigDecimal totalWeight;
+
+    /**
      * @Description 购买数量
      * @Param
      * @Author yw

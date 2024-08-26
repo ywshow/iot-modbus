@@ -7,11 +7,13 @@
         <version>3.2.9-SNAPSHOT</version>
     </parent>
     <artifactId>xp-cloud-printer</artifactId>
-    <name>Archetype - xp-cloud-printer</name>
+    <name>xp-cloud-printer</name>
     <url>http://maven.apache.org</url>
     <properties>
         <hutool.version>5.6.2</hutool.version>
         <iot-modbus-common.version>3.2.9-SNAPSHOT</iot-modbus-common.version>
+        <maven.compiler.source>11</maven.compiler.source>
+        <maven.compiler.target>11</maven.compiler.target>
     </properties>
     <dependencies>
         <dependency>
@@ -38,6 +40,10 @@
             <groupId>com.takeoff.iot</groupId>
             <artifactId>iot-modbus-common</artifactId>
             <version>${iot-modbus-common.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.integration</groupId>
+            <artifactId>spring-integration-mqtt</artifactId>
         </dependency>
     </dependencies>
     <build>
