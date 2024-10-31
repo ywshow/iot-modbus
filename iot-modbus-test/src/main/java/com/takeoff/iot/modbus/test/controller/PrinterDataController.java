@@ -7,6 +7,7 @@ import cn.hutool.json.JSONUtil;
 import com.alibaba.fastjson.JSON;
 import com.takeoff.iot.modbus.common.entity.Param;
 import com.takeoff.iot.modbus.common.entity.PrinterData;
+import com.takeoff.iot.modbus.common.entity.ShoppingList;
 import com.takeoff.iot.modbus.test.service.MqttLogicService;
 import com.takeoff.iot.modbus.test.service.PrinterDataService;
 import com.takeoff.iot.modbus.test.utils.R;
@@ -165,6 +166,28 @@ public class PrinterDataController {
     public R mqPrinter(@RequestBody Param<PrinterData> param) {
         try {
             mqttLogicService.sentToServer(param);
+            return R.ok();
+        } catch (Exception e) {
+            log.error("mqPrinter", e);
+            if (e instanceof UtilException) {
+                return R.error(e.getMessage());
+            } else {
+                return R.error("服务异常");
+            }
+        }
+    }
+
+    /**
+     * @Description 称重mqtt推送
+     * @Param map 参数
+     * @Author yw
+     * @Date 2024/7/31 11:00
+     * @Return
+     **/
+    @RequestMapping("/mq/printer/tag")
+    public R tracingBackToTheSource(@RequestBody PrinterData<ShoppingList> param) {
+        try {
+            printerDataService.tracingBackToTheSource(param);
             return R.ok();
         } catch (Exception e) {
             log.error("mqPrinter", e);

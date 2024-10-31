@@ -172,7 +172,7 @@ public class MqttConfig {
         // 可以同时消费（订阅）多个Topic
         String[] strings = subList.toArray(new String[subList.size()]);
         MqttPahoMessageDrivenChannelAdapter adapter =
-                new MqttPahoMessageDrivenChannelAdapter(clientId, clientFactory(), strings);
+                new MqttPahoMessageDrivenChannelAdapter(clientId+"_inbound", clientFactory(), strings);
         adapter.setCompletionTimeout(5000);
         adapter.setConverter(new DefaultPahoMessageConverter());
         adapter.setQos(Integer.valueOf(qos));

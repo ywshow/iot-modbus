@@ -39,7 +39,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
     private final int offset = 40;
 
     //Y轴偏移量
-    private final int offsetSecond_y = 40;
+    private final int offsetSecond_y = 33;
 
     //X轴偏移量
     private final int offsetSecond_x = 25;
@@ -55,6 +55,8 @@ public class PrinterDataServiceImpl implements PrinterDataService {
 
     //每张标签默认打印商品数量
     private int printerNumber = 8;
+
+    private final String qrCodeUrl = "https://work.weixin.qq.com/ca/cawcdebcbbf4694246?customer_channel=qywx_ca:107256181";
 
     /**
      * 根据打印机实际的PID VID进行打印,可以在设备管理器 打印支持 查看
@@ -524,7 +526,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         /*只能是两行的商品名称，再多的话，因为第一行会多出“品名：”，商行以上的话，换行不准确，暂时只保留两行，太长容不下**/
         if (goodsLength.compareTo(rowOfNumber) <= 0) {
             //商品
-            String text = "TEXT " + offsetSecond_x + "," + (offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"商品：" + tbsData.getGoodsName() + "\"\r\n";
+            String text = "TEXT " + offsetSecond_x + "," + (offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"商品:" + tbsData.getGoodsName() + "\"\r\n";
             PrinterUtils.PrinterWrite(printer, text.getBytes("GBK"), text.getBytes("GBK").length);
         } else {
             /*商品打印换行截取**/
@@ -551,7 +553,7 @@ public class PrinterDataServiceImpl implements PrinterDataService {
                 } else {
                     subStr = tbsData.getGoodsName().substring(i, index);
                     //商品
-                    String text = "TEXT " + offsetSecond_x + "," + (numIndex * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"商品：" + subStr + "\"\r\n";
+                    String text = "TEXT " + offsetSecond_x + "," + (numIndex * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"商品:" + subStr + "\"\r\n";
                     PrinterUtils.PrinterWrite(printer, text.getBytes("GBK"), text.getBytes("GBK").length);
                 }
             }
@@ -560,8 +562,8 @@ public class PrinterDataServiceImpl implements PrinterDataService {
         //用户
         int nameLength = tbsData.getUserName().length();
         String dataStr = "";
-        if (nameLength > rowOfNumber.intValue()) {
-            dataStr = tbsData.getUserName().substring(0, rowOfNumber.intValue() + 1);
+        if (nameLength > 6) {
+            dataStr = tbsData.getUserName().substring(0, 6);
         } else {
             dataStr = tbsData.getUserName();
         }
@@ -569,18 +571,18 @@ public class PrinterDataServiceImpl implements PrinterDataService {
             num = 2;
         }
 
-        String date = "TEXT " + offsetSecond_x + "," + ((num + 1) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"用户：" + dataStr + "\"\r\n";
+        String date = "TEXT " + offsetSecond_x + "," + ((num + 1) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"用户:" + dataStr + "\"\r\n";
         PrinterUtils.PrinterWrite(printer, date.getBytes("GBK"), date.getBytes("GBK").length);
 
         //电话
-        String provenance = "TEXT " + offsetSecond_x + "," + ((num + 2) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"电话：" + tbsData.getPhone() + "\"\r\n";
+        String provenance = "TEXT " + offsetSecond_x + "," + ((num + 2) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"电话:" + tbsData.getPhone() + "\"\r\n";
         PrinterUtils.PrinterWrite(printer, provenance.getBytes("GBK"), provenance.getBytes("GBK").length);
 
         //规格
         int quantity = tbsData.getWeight().divide(tbsData.getPerWeight(), 0, RoundingMode.HALF_UP).intValue();
         BigDecimal actWeight = tbsData.getWeight().divide(BigDecimal.valueOf(quantity), 0, RoundingMode.HALF_UP);
         String weightInfo = actWeight + " * " + quantity;
-        String weight = "TEXT " + offsetSecond_x + "," + ((num + 3) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"重量：" + weightInfo + " /g\"\r\n";
+        String weight = "TEXT " + offsetSecond_x + "," + ((num + 3) * offsetSecond_y + offsetSecondConstant_Y) + ",\"TSS24.BF2\",0,1,1,\"重量:" + weightInfo + "/g\"\r\n";
         PrinterUtils.PrinterWrite(printer, weight.getBytes("GBK"), weight.getBytes("GBK").length);
 
         //价格
@@ -595,8 +597,20 @@ public class PrinterDataServiceImpl implements PrinterDataService {
 
         //二维码
         //TODO 待确定URL再调整
-       /* String qrCode = "QRCODE 650," + 180 + ",Q,4,A,0,M2,\"" + tbsData.getQrCode() + "\"\r\n";
-        PrinterUtils.PrinterWrite(printer, qrCode.getBytes("GBK"), qrCode.getBytes("GBK").length);*/
+        String qrCode = "QRCODE 650," + 135 + ",M,4,A,0,M2,S3,\"" + qrCodeUrl + "\"\r\n";
+        PrinterUtils.PrinterWrite(printer, qrCode.getBytes("GBK"), qrCode.getBytes("GBK").length);
+
+        String qrCodeDesc = "售后客服码";
+        String describeDesc = "TEXT 665,290,\"TSS24.BF2\",0,1,1,\"" + qrCodeDesc + "\"\r\n";
+        PrinterUtils.PrinterWrite(printer, describeDesc.getBytes("GBK"), describeDesc.getBytes("GBK").length);
+
+        String describeInfo = "注:若重量低于正负公";
+        String describe = "TEXT 20,260,\"TSS24.BF2\",0,1,1,\"" + describeInfo + "\"\r\n";
+        PrinterUtils.PrinterWrite(printer, describe.getBytes("GBK"), describe.getBytes("GBK").length);
+
+        String describeInfoSecond = "   差,差价原路退回。";
+        String describeInfoSecondDescribe = "TEXT 20,290,\"TSS24.BF2\",0,1,1,\"" + describeInfoSecond + "\"\r\n";
+        PrinterUtils.PrinterWrite(printer, describeInfoSecondDescribe.getBytes("GBK"), describeInfoSecondDescribe.getBytes("GBK").length);
 
         //扫码溯源
 //        String source = "TEXT 620," + 15 + ",\"TSS24.BF2\",0,1,1,\"扫码溯源\"\r\n";
