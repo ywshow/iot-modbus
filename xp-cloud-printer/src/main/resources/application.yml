@@ -14,7 +14,7 @@ mqtt:
   password: lvyuan!
   qos: 2
   client:
-    #伺候id改为获取本机ip
+    #之后id改为获取本机ip
     id: printer
   # 默认主题
   topic: receipt_topic

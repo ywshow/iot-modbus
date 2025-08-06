@@ -9,6 +9,7 @@ import com.gitee.gsocode.opensdk.responsevo.ObjectRestResponse;
 import com.gitee.gsocode.opensdk.responsevo.PrinterResult;
 import com.takeoff.iot.modbus.common.entity.PrinterData;
 import com.takeoff.iot.modbus.common.entity.ShoppingList;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -25,6 +26,7 @@ import java.util.List;
  * @date: 2024/8/24 16:36
  */
 @Service
+@Slf4j
 public class XPrinterServiceImpl implements XPrinterService {
 
     @Autowired
@@ -153,8 +155,32 @@ public class XPrinterServiceImpl implements XPrinterService {
         //不检查打印机是否在线，直接生成打印订单，并返回打印订单号。如果打印机不在线，订单将缓存在打印队列中，打印机正常在线时会自动打印
         restRequest.setMode(1);
         restRequest.setExpiresIn(7200);
-
+        initLabelContent(restRequest, printerData);
+        log.info("打印标签内容：{}", JSON.toJSONString(restRequest));
         return iXpyunPrintService.printLabel(restRequest);
+    }
+
+    /**
+     * @Description 标签打印，数据内容初始化
+     * @Param
+     * @Author yw
+     * @Date 2024/8/24 16:37
+     * @Return
+     **/
+    public void initLabelContent(PrintRequest restRequest, PrinterData printerData) {
+        String content = "";
+        content += "<PAGE>";
+        content += "<SIZE>40,30</SIZE>";
+        content += "<TEXT x=\"8\" y=\"8\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName() + "</TEXT>";
+        content += "<TEXT x=\"8\" y=\"38\" w=\"1\" h=\"1\" r=\"0\">重量：" + printerData.getWeight() + " /g</TEXT>";
+        //溯源码
+        content += "<QRC x=\"10\" y=\"70\" s=\"5\" e=\"L\">" + printerData.getTraceCode() + "</QRC>";
+        //PT-324-32423-23-234-S324
+        content += "<QRC x=\"165\" y=\"70\" s=\"5\" e=\"L\">" + printerData.getQrCode() + "</QRC>";
+        content += "<TEXT x=\"38\" y=\"210\" w=\"1\" h=\"1\" r=\"0\">溯源码</TEXT>";
+        content += "<TEXT x=\"188\" y=\"210\" w=\"1\" h=\"1\" r=\"0\">商品码</TEXT>";
+        content += "</PAGE>";
+        restRequest.setContent(content);
     }
 
     /**

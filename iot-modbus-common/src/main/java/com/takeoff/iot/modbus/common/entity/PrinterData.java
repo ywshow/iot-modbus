@@ -88,6 +88,11 @@ public class PrinterData<T> implements Serializable {
     private String qrCode;
 
     /**
+     * 溯源码
+     */
+    private String traceCode;
+
+    /**
      * 原产地
      */
     private String provenance;
