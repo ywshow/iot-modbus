@@ -14,6 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.util.HashMap;
+import java.util.Map;
+
 /**
  * @description: mqtt业务逻辑实现
  * @projectName: iot-modbus
@@ -49,6 +52,9 @@ public class MqttLogicServiceImpl implements MqttLogicService {
                 break;
             case "topic_default":
                 break;
+            case "sort_weight_topic":
+                printLabel(topic, msg);
+                break;
             default:
                 log.error("default：topic：{}；msg：{}", topic, msg);
         }
@@ -81,19 +87,38 @@ public class MqttLogicServiceImpl implements MqttLogicService {
     }
 
     /**
-     * @Description 称重打印标签
+     * @Description 小票打印
      * @Param [topic, msg]
      * @Author yw
      * @Date 2024/8/1 10:19
      * @Return void
      **/
     public void sortWeightPrinter(String topic, String msg) throws Exception {
+        log.debug("小票打印:{}", msg);
         Param param = JSON.parseObject(msg, Param.class);
         //WMS传入IP，根据IP作为tag校验哪个电脑的称
         if (param.getData() != null) {
             PrinterData printerData = JSON.parseObject(JSON.toJSONString(param.getData()), PrinterData.class);
             PrintRequest printRequest = new PrintRequest();
             XPrinterService.print(printRequest, printerData);
+        }
+    }
+
+    /**
+     * @Description 标签打印
+     * @Param [topic, msg]
+     * @Author yw
+     * @Date 2024/8/1 10:19
+     * @Return void
+     **/
+    public void printLabel(String topic, String msg) {
+        log.debug("标签打印:{}", msg);
+        HashMap map = JSON.parseObject(msg, HashMap.class);
+        //WMS传入IP，根据IP作为tag校验哪个电脑的称
+        if (map != null && map.containsKey("data") && map.containsKey("printRequest")) {
+            PrinterData printerData = JSON.parseObject(JSON.toJSONString(map.get("data")), PrinterData.class);
+            PrintRequest printRequest = JSON.parseObject(JSON.toJSONString(map.get("printRequest")), PrintRequest.class);
+            XPrinterService.printLabel(printRequest, printerData);
         }
     }
 }

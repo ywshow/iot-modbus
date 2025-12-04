@@ -155,7 +155,7 @@ public class XPrinterServiceImpl implements XPrinterService {
         //不检查打印机是否在线，直接生成打印订单，并返回打印订单号。如果打印机不在线，订单将缓存在打印队列中，打印机正常在线时会自动打印
         restRequest.setMode(1);
         restRequest.setExpiresIn(7200);
-        initLabelContent(restRequest, printerData);
+        initLabelContentMiddlePaper(restRequest, printerData);
         log.info("打印标签内容：{}", JSON.toJSONString(restRequest));
         return iXpyunPrintService.printLabel(restRequest);
     }
@@ -179,6 +179,33 @@ public class XPrinterServiceImpl implements XPrinterService {
         content += "<QRC x=\"165\" y=\"70\" s=\"5\" e=\"L\">" + printerData.getQrCode() + "</QRC>";
         content += "<TEXT x=\"38\" y=\"210\" w=\"1\" h=\"1\" r=\"0\">溯源码</TEXT>";
         content += "<TEXT x=\"188\" y=\"210\" w=\"1\" h=\"1\" r=\"0\">商品码</TEXT>";
+        content += "</PAGE>";
+        restRequest.setContent(content);
+    }
+
+    /**
+     * @Description 标签打印，数据内容初始化
+     * @Param
+     * @Author yw
+     * @Date 2024/8/24 16:37
+     * @Return
+     **/
+    public void initLabelContentMiddlePaper(PrintRequest restRequest, PrinterData printerData) {
+        String content = "";
+        content += "<PAGE>";
+        content += "<SIZE>70,60</SIZE>";
+        content += "<TEXT x=\"8\" y=\"8\" w=\"1\" h=\"1\" r=\"0\">订单号：" + printerData.getOrderNo() + "</TEXT>";
+        content += "<TEXT x=\"8\" y=\"48\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName() + "</TEXT>";
+        content += "<TEXT x=\"8\" y=\"88\" w=\"1\" h=\"1\" r=\"0\">重量：" + printerData.getWeight() + " /g</TEXT>";
+        //溯源码
+        content += "<QRC x=\"250\" y=\"300\" s=\"5\" e=\"L\">" + printerData.getTraceCode() + "</QRC>";
+        //PT-324-32423-23-234-S324
+        //条形码
+        content += "<BC128 x=\"520\" y=\"48\" h=\"100\" s=\"1\" n=\"2\" w=\"2\" r=\"90\">" + printerData.getQrCode() + "</BC128>";
+        //订单
+        content += "<QRC x=\"20\" y=\"300\" s=\"5\" e=\"L\">" + printerData.getOrderNo() + "</QRC>";
+        content += "<TEXT x=\"270\" y=\"418\" w=\"1\" h=\"1\" r=\"0\">溯源码</TEXT>";
+        content += "<TEXT x=\"38\" y=\"418\" w=\"1\" h=\"1\" r=\"0\">订单号</TEXT>";
         content += "</PAGE>";
         restRequest.setContent(content);
     }

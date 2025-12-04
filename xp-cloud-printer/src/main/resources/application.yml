@@ -20,6 +20,7 @@ mqtt:
   topic: receipt_topic
   subList:
     - receipt_topic
+    - sort_weight_topic
 xp:
   dev:
     domain: https://open.xpyun.net
