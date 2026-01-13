@@ -111,6 +111,8 @@ public class PrinterData<T> implements Serializable {
      **/
     private boolean shoppingList;
 
+    private String shelfLocation;
+
     /**
      * @Description 购物清单列表
      * @Param

@@ -1,6 +1,7 @@
 package com.cloud.xprinter.service.impl;
 
 import cn.hutool.core.util.DesensitizedUtil;
+import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.cloud.xprinter.service.XPrinterService;
 import com.gitee.gsocode.opensdk.IXpyunPrintService;
@@ -195,8 +196,13 @@ public class XPrinterServiceImpl implements XPrinterService {
         content += "<PAGE>";
         content += "<SIZE>70,60</SIZE>";
         content += "<TEXT x=\"8\" y=\"8\" w=\"1\" h=\"1\" r=\"0\">订单号：" + printerData.getOrderNo() + "</TEXT>";
-        content += "<TEXT x=\"8\" y=\"48\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName() + "</TEXT>";
-        content += "<TEXT x=\"8\" y=\"88\" w=\"1\" h=\"1\" r=\"0\">重量：" + printerData.getWeight() + " /g</TEXT>";
+        content += "<TEXT x=\"8\" y=\"48\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getUserName() + " </TEXT>";
+        content += "<TEXT x=\"8\" y=\"88\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName() + "</TEXT>";
+        content += "<TEXT x=\"8\" y=\"128\" w=\"1\" h=\"1\" r=\"0\">重量：" + printerData.getWeight() + " /g</TEXT>";
+        if (!StrUtil.isEmpty(printerData.getShelfLocation())) {
+            content += "<TEXT x=\"8\" y=\"168\" w=\"1\" h=\"1\" r=\"0\">取货位：" + printerData.getShelfLocation() + " </TEXT>";
+        }
+
         //溯源码
         content += "<QRC x=\"250\" y=\"300\" s=\"5\" e=\"L\">" + printerData.getTraceCode() + "</QRC>";
         //PT-324-32423-23-234-S324
