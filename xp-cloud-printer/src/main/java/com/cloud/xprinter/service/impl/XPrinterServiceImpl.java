@@ -199,7 +199,7 @@ public class XPrinterServiceImpl implements XPrinterService {
         content += "<TEXT x=\"8\" y=\"8\" w=\"1\" h=\"1\" r=\"0\">订单号：" + printerData.getOrderNo() + "</TEXT>";
         content += "<TEXT x=\"8\" y=\"48\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getUserName() + " </TEXT>";
         content += "<TEXT x=\"8\" y=\"88\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName() + "</TEXT>";
-        content += "<TEXT x=\"8\" y=\"128\" w=\"1\" h=\"1\" r=\"0\">重量：" + printerData.getWeight() + " /g</TEXT>";
+        content += "<TEXT x=\"8\" y=\"128\" w=\"1\" h=\"1\" r=\"0\">重量：" + printerData.getWeight().intValue() + " /g</TEXT>";
         if (!StrUtil.isEmpty(printerData.getShelfLocation())) {
             content += "<TEXT x=\"8\" y=\"168\" w=\"1\" h=\"1\" r=\"0\">取货位：" + printerData.getShelfLocation() + " </TEXT>";
         }
