@@ -193,15 +193,41 @@ public class XPrinterServiceImpl implements XPrinterService {
      * @Return
      **/
     public void initLabelContentMiddlePaper(PrintRequest restRequest, PrinterData printerData) {
+        //行距，下一行的初始举例
+        int line = 40;
+        //Y轴
+        int base = 8;
+        //每行长度
+        int length = 13;
+        int totalLength = printerData.getGoodsName().length();
+        int row = BigDecimal.valueOf(totalLength).divide(BigDecimal.valueOf(length), 0, RoundingMode.UP).intValue();
         String content = "";
         content += "<PAGE>";
         content += "<SIZE>70,60</SIZE>";
-        content += "<TEXT x=\"8\" y=\"8\" w=\"1\" h=\"1\" r=\"0\">订单号：" + printerData.getOrderNo() + "</TEXT>";
-        content += "<TEXT x=\"8\" y=\"48\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getUserName() + " </TEXT>";
-        content += "<TEXT x=\"8\" y=\"88\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName() + "</TEXT>";
-        content += "<TEXT x=\"8\" y=\"128\" w=\"1\" h=\"1\" r=\"0\">重量：" + printerData.getWeight().intValue() + " /g</TEXT>";
+        content += "<TEXT x=\"8\" y=\"" + base + "\" w=\"1\" h=\"1\" r=\"0\">订单号：" + printerData.getOrderNo() + "</TEXT>";
+        content += "<TEXT x=\"8\" y=\"" + (line + base) + "\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getUserName() + " </TEXT>";
+        for (int i = 0; i < row; i++) {
+            if (row == 1) {
+                content += "<TEXT x=\"8\" y=\"" + ((i + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getGoodsName() + " </TEXT>";
+            } else {
+                if (i == 0) {
+                    content += "<TEXT x=\"8\" y=\"" + ((i + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getGoodsName().substring(0, length) + " </TEXT>";
+                } else {
+                    int index = (i + 1) * length+2;
+                    if (index > totalLength) {
+                        index = totalLength;
+                    }
+                    content += "<TEXT x=\"8\" y=\"" + ((i + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">" + printerData.getGoodsName().substring(i * length, index) + " </TEXT>";
+                }
+
+            }
+        }
+
+        //content += "<TEXT x=\"8\" y=\"" + ((row + 1) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName() + "</TEXT>";
+        content += "<TEXT x=\"8\" y=\"" + ((row + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">数量：" + printerData.getQuantity() + "</TEXT>";
+        content += "<TEXT x=\"8\" y=\"" + ((row + 3) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">总重量：" + printerData.getWeight().intValue() + " g</TEXT>";
         if (!StrUtil.isEmpty(printerData.getShelfLocation())) {
-            content += "<TEXT x=\"8\" y=\"168\" w=\"1\" h=\"1\" r=\"0\">取货位：" + printerData.getShelfLocation() + " </TEXT>";
+            content += "<TEXT x=\"8\" y=\"" + ((row + 4) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">取货位：" + printerData.getShelfLocation() + " </TEXT>";
         }
 
         //溯源码
