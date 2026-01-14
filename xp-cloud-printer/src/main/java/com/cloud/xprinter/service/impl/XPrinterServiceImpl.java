@@ -1,6 +1,7 @@
 package com.cloud.xprinter.service.impl;
 
 import cn.hutool.core.util.DesensitizedUtil;
+import cn.hutool.core.util.IdUtil;
 import cn.hutool.core.util.StrUtil;
 import com.alibaba.fastjson.JSON;
 import com.cloud.xprinter.service.XPrinterService;
@@ -152,7 +153,7 @@ public class XPrinterServiceImpl implements XPrinterService {
             //静音
             restRequest.setVoice(1);
         }
-        restRequest.setIdempotent(printerData.getOrderNo());
+        restRequest.setIdempotent(IdUtil.fastSimpleUUID());
         //不检查打印机是否在线，直接生成打印订单，并返回打印订单号。如果打印机不在线，订单将缓存在打印队列中，打印机正常在线时会自动打印
         restRequest.setMode(1);
         restRequest.setExpiresIn(7200);
