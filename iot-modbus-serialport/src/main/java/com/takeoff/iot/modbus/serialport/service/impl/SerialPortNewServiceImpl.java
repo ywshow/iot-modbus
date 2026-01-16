@@ -25,12 +25,8 @@ import org.apache.commons.lang3.StringUtils;
 import org.springframework.stereotype.Service;
 
 import javax.annotation.Resource;
-import java.net.InetAddress;
-import java.net.UnknownHostException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.net.*;
+import java.util.*;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.concurrent.TimeUnit;
@@ -124,8 +120,12 @@ public class SerialPortNewServiceImpl implements SerialPortNewService {
         } catch (UnknownHostException e) {
             throw new RuntimeException(e);
         }
-        String ipAddress = inetAddress.getHostAddress();
-        log.info(ipAddress);
+        String ipAddress = null;
+        try {
+            ipAddress = getIpBySegment("192.168.0");
+        } catch (SocketException e) {
+            throw new RuntimeException(e);
+        }
         if (!StringUtils.isAnyEmpty(defaultValue, ipAddress)) {
             Map<String, String> map = new HashMap<>();
             // 正则表达式匹配金额数字
@@ -134,9 +134,28 @@ public class SerialPortNewServiceImpl implements SerialPortNewService {
             map.put("weight", matches);
             map.put("originalWeight", defaultValue);
             map.put("ip", ipAddress);
-            log.info("称重数据发送：" + JSON.toJSONString(map));
+            log.info("称重数据发送：{}", JSON.toJSONString(map));
             mqttService.sendToMqtt("electronic_weight", JSON.toJSONString(map));
         }
+    }
+
+    public static String getIpBySegment(String segment) throws SocketException {
+        Enumeration<NetworkInterface> interfaces = NetworkInterface.getNetworkInterfaces();
+
+        while (interfaces.hasMoreElements()) {
+            NetworkInterface networkInterface = interfaces.nextElement();
+            Enumeration<InetAddress> addresses = networkInterface.getInetAddresses();
+
+            while (addresses.hasMoreElements()) {
+                InetAddress address = addresses.nextElement();
+                if (!address.isLoopbackAddress() &&
+                        address instanceof Inet4Address &&
+                        address.getHostAddress().startsWith(segment)) {
+                    return address.getHostAddress();
+                }
+            }
+        }
+        return null;
     }
 
     /**
