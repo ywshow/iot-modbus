@@ -208,10 +208,10 @@ public class XPrinterServiceImpl implements XPrinterService {
         content += "<TEXT x=\"8\" y=\"" + (line + base) + "\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getUserName() + " </TEXT>";
         for (int i = 0; i < row; i++) {
             if (row == 1) {
-                content += "<TEXT x=\"8\" y=\"" + ((i + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getGoodsName() + " </TEXT>";
+                content += "<TEXT x=\"8\" y=\"" + ((i + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName() + " </TEXT>";
             } else {
                 if (i == 0) {
-                    content += "<TEXT x=\"8\" y=\"" + ((i + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getGoodsName().substring(0, length) + " </TEXT>";
+                    content += "<TEXT x=\"8\" y=\"" + ((i + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName().substring(0, length) + " </TEXT>";
                 } else {
                     int index = (i + 1) * length+2;
                     if (index > totalLength) {
