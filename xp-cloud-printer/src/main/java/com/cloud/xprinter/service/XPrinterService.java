@@ -19,6 +19,15 @@ public interface XPrinterService {
     ObjectRestResponse<String> print(PrintRequest restRequest, PrinterData printerData);
 
     /**
+     * @Description 总仓票据打印
+     * @Param
+     * @Author yw
+     * @Date 2024/8/24 16:37
+     * @Return
+     **/
+    ObjectRestResponse<String> printCenter(PrintRequest restRequest, PrinterData printerData);
+
+    /**
      * @Description 标签打印
      * @Param
      * @Author yw

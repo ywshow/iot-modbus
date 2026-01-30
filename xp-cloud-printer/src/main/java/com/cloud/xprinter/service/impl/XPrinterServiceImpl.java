@@ -55,24 +55,32 @@ public class XPrinterServiceImpl implements XPrinterService {
             //静音
             restRequest.setVoice(1);
         }
-        restRequest.setSn(printerData.getPrinterNo());
-        restRequest.setIdempotent(printerData.getOrderNo());
+        if(!StrUtil.isEmpty(printerData.getPrinterNo())){
+            restRequest.setSn(printerData.getPrinterNo());
+        }
+        restRequest.setIdempotent(IdUtil.fastSimpleUUID());
         //不检查打印机是否在线，直接生成打印订单，并返回打印订单号。如果打印机不在线，订单将缓存在打印队列中，打印机正常在线时会自动打印
         restRequest.setMode(1);
         restRequest.setExpiresIn(7200);
-        StringBuffer content = new StringBuffer();
-        content.append("<IMG200></IMG><BR>");
-        content.append("<CB>购物清单<BR><BR><BR></CB>");
-        content.append("<L>");
-        content.append("用户：").append(printerData.getUserName()).append("<BR>");
-        content.append("电话：").append(DesensitizedUtil.mobilePhone(printerData.getPhone())).append("<BR>");
-//        content.append("地址：珠海市香洲区xx路xx号<BR>");
-        content.append("</L>");
-        content.append("<L>");
-//        content.append("<LINE p=\"20,26\" />商品<HT>数量<HT>重量(g)<HT>单价<BR>");
-        content.append("<LINE p=\"18,25\" />商品<HT>数量<HT>总重(g)<BR>");
-        content.append("--------------------------------<BR>");
+        if (printerData.isCenterWarehouse()) {
+            return printCenter(restRequest, printerData);
+        } else {
+            return printFront(restRequest, printerData);
+        }
+    }
+
+    public ObjectRestResponse<String> printFront(PrintRequest restRequest, PrinterData printerData) {
         if (printerData.getList() != null && !printerData.getList().isEmpty()) {
+            StringBuffer content = new StringBuffer();
+            content.append("<IMG200></IMG><BR>");
+            content.append("<CB>购物清单<BR><BR><BR></CB>");
+            content.append("<L>");
+            content.append("用户：").append(printerData.getUserName()).append("<BR>");
+            content.append("电话：").append(DesensitizedUtil.mobilePhone(printerData.getPhone())).append("<BR>");
+            content.append("</L>");
+            content.append("<L>");
+            content.append("<LINE p=\"18,25\" />商品<HT>数量<HT>总重(g)<BR>");
+            content.append("--------------------------------<BR>");
             for (Object shoppingList : printerData.getList()) {
                 ShoppingList shopping = JSON.parseObject(JSON.toJSONString(shoppingList), ShoppingList.class);
                 System.out.println(">>>" + JSON.toJSONString(shopping));
@@ -117,14 +125,8 @@ public class XPrinterServiceImpl implements XPrinterService {
                     }
                 }
             }
-            /*content.append("可乐鸡翅<HT>2<HT>9.99<BR>");
-            content.append("水煮鱼特辣<HT>1<HT>108.00<BR>");
-            content.append("豪华版超级无敌龙虾炒饭<BR>");
-            content.append("<HT>1<HT>99.90<BR>");
-            content.append("炭烤鳕鱼<HT>5<HT>19.99<BR>");*/
             content.append("--------------------------------<BR>");
             content.append("</L>");
-//            content.append("<R>合计：327.83元<BR></R><BR>");
 //        content.append("<QRCODE s=8 e=L l=center>http://www.xpyun.net</QRCODE><BR>");
             restRequest.setContent(content.toString());
             return iXpyunPrintService.print(restRequest);
@@ -134,7 +136,32 @@ public class XPrinterServiceImpl implements XPrinterService {
             restResponse.setMsg("购物清单为空");
             return restResponse;
         }
+    }
 
+    @Override
+    public ObjectRestResponse<String> printCenter(PrintRequest restRequest, PrinterData printerData) {
+        StringBuffer content = new StringBuffer();
+        content.append("<IMG200></IMG><BR>");
+        content.append("<CB>购物清单<BR><BR><BR></CB>");
+        content.append("<L>");
+        content.append("用户：").append(printerData.getUserName()).append("<BR>");
+        content.append("电话：").append(DesensitizedUtil.mobilePhone(printerData.getPhone())).append("<BR>");
+        content.append("合计：").append("122.23 元<BR>");
+        content.append("</L>");
+        content.append("------------------------------------------------<BR>");
+        content.append("<L>");
+        content.append("<LINE p=\"19,27,33,43\" />商品<HT>金额<HT>数量<HT>总重(g)<HT>货架<BR>");
+        content.append("------------------------------------------------<BR>");
+        content.append("<TABLE col=\"18,10,6,6,8\" w=1 h=2 b=1 lh=100><BR>");
+        content.append("<tr>辣椒炒肉(放葱)加西瓜<td> 1.00<td>2<td>3<td>4</tr>");
+        content.append("<tr>白切鸡<td> 515.00<td>616<td>7777<td>1800</tr>");
+        content.append("<tr>深井烧鹅<td> 99.00<td>10<td>1232<td>222</tr>");
+        content.append("</TABLE>");
+        content.append("------------------------------------------------<BR>");
+        content.append("</L>");
+
+        restRequest.setContent(content.toString());
+        return iXpyunPrintService.print(restRequest);
     }
 
     /**
@@ -213,7 +240,7 @@ public class XPrinterServiceImpl implements XPrinterService {
                 if (i == 0) {
                     content += "<TEXT x=\"8\" y=\"" + ((i + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName().substring(0, length) + " </TEXT>";
                 } else {
-                    int index = (i + 1) * length+2;
+                    int index = (i + 1) * length + 2;
                     if (index > totalLength) {
                         index = totalLength;
                     }

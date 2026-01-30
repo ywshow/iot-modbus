@@ -142,4 +142,9 @@ public class PrinterData<T> implements Serializable {
      * @Return
      **/
     private boolean nextPagePrinter;
+
+    /**
+     * 是否总仓：false：否；true：是
+     */
+    private boolean centerWarehouse;
 }
