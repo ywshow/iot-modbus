@@ -50,4 +50,14 @@ public class ShoppingList {
      * @Return
      **/
     private Integer num;
+
+    /**
+     * 货架
+     */
+    private String location;
+
+    /**
+     * 单价
+     */
+    private BigDecimal price;
 }

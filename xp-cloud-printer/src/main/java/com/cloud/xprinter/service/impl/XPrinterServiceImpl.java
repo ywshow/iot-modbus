@@ -55,7 +55,7 @@ public class XPrinterServiceImpl implements XPrinterService {
             //静音
             restRequest.setVoice(1);
         }
-        if(!StrUtil.isEmpty(printerData.getPrinterNo())){
+        if (!StrUtil.isEmpty(printerData.getPrinterNo())) {
             restRequest.setSn(printerData.getPrinterNo());
         }
         restRequest.setIdempotent(IdUtil.fastSimpleUUID());
@@ -146,16 +146,37 @@ public class XPrinterServiceImpl implements XPrinterService {
         content.append("<L>");
         content.append("用户：").append(printerData.getUserName()).append("<BR>");
         content.append("电话：").append(DesensitizedUtil.mobilePhone(printerData.getPhone())).append("<BR>");
-        content.append("合计：").append("122.23 元<BR>");
+        if (printerData.getOrderTotalFee() != null) {
+            content.append("订单总额：").append(printerData.getOrderTotalFee()).append(" 元<BR>");
+        }
+
+        if (printerData.getOrderPayFee() != null) {
+            content.append("支付总额：").append(printerData.getOrderPayFee()).append(" 元<BR>");
+        }
+
         content.append("</L>");
         content.append("------------------------------------------------<BR>");
         content.append("<L>");
-        content.append("<LINE p=\"19,27,33,43\" />商品<HT>金额<HT>数量<HT>总重(g)<HT>货架<BR>");
+        content.append("<LINE p=\"19,27,33,43\" />商品<HT>单价<HT>数量<HT>总重(g)<HT>货架<BR>");
         content.append("------------------------------------------------<BR>");
         content.append("<TABLE col=\"18,10,6,6,8\" w=1 h=2 b=1 lh=100><BR>");
-        content.append("<tr>辣椒炒肉(放葱)加西瓜<td> 1.00<td>2<td>3<td>4</tr>");
+        if (printerData.getList() != null && !printerData.getList().isEmpty()) {
+            for (Object shoppingList : printerData.getList()) {
+                ShoppingList shopping = JSON.parseObject(JSON.toJSONString(shoppingList), ShoppingList.class);
+                content.append("<tr>").append(shopping.getName()).append("<td> ");
+                if(shopping.getPrice()!=null){
+                    content.append(shopping.getPrice()).append("<td>");
+                }else{
+                    content.append("0.00").append("<td>");
+                }
+                content.append(shopping.getNum()).append("<td>");
+                content.append(shopping.getTotalWeight().intValue()).append("<td>");
+                content.append(shopping.getLocation()).append("</tr>");
+            }
+        }
+        /*content.append("<tr>辣椒炒肉(放葱)加西瓜<td> 1.00<td>2<td>3<td>4</tr>");
         content.append("<tr>白切鸡<td> 515.00<td>616<td>7777<td>1800</tr>");
-        content.append("<tr>深井烧鹅<td> 99.00<td>10<td>1232<td>222</tr>");
+        content.append("<tr>深井烧鹅<td> 99.00<td>10<td>1232<td>222</tr>");*/
         content.append("</TABLE>");
         content.append("------------------------------------------------<BR>");
         content.append("</L>");
@@ -183,7 +204,8 @@ public class XPrinterServiceImpl implements XPrinterService {
         restRequest.setIdempotent(IdUtil.fastSimpleUUID());
         //不检查打印机是否在线，直接生成打印订单，并返回打印订单号。如果打印机不在线，订单将缓存在打印队列中，打印机正常在线时会自动打印
         restRequest.setMode(1);
-        restRequest.setExpiresIn(7200);
+        //7200
+        restRequest.setExpiresIn(86399);
         initLabelContentMiddlePaper(restRequest, printerData);
         log.info("打印标签内容：{}", JSON.toJSONString(restRequest));
         return iXpyunPrintService.printLabel(restRequest);

@@ -147,4 +147,14 @@ public class PrinterData<T> implements Serializable {
      * 是否总仓：false：否；true：是
      */
     private boolean centerWarehouse;
+
+    /**
+     * 订单总金额
+     */
+    private BigDecimal orderTotalFee;
+
+    /**
+     * 订单支付金额
+     */
+    private BigDecimal orderPayFee;
 }
