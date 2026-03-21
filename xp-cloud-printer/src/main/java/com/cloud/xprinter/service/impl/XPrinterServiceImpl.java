@@ -164,13 +164,19 @@ public class XPrinterServiceImpl implements XPrinterService {
             for (Object shoppingList : printerData.getList()) {
                 ShoppingList shopping = JSON.parseObject(JSON.toJSONString(shoppingList), ShoppingList.class);
                 content.append("<tr>").append(shopping.getName()).append("<td> ");
-                if(shopping.getPrice()!=null){
+                if (shopping.getPrice() != null) {
                     content.append(shopping.getPrice()).append("<td>");
-                }else{
+                } else {
                     content.append("0.00").append("<td>");
                 }
                 content.append(shopping.getNum()).append("<td>");
-                content.append(shopping.getTotalWeight().intValue()).append("<td>");
+                //标品按每份重量打印，非标品按实际称重重量打印
+                if (printerData.getStandard() != null && printerData.getStandard() == 1) {
+                    content.append(shopping.getPerWeight().multiply(BigDecimal.valueOf(shopping.getNum())).intValue());
+                } else {
+                    content.append(shopping.getTotalWeight().intValue()).append("<td>");
+                }
+
                 content.append(shopping.getLocation()).append("</tr>");
             }
         }
