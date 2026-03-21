@@ -94,7 +94,7 @@ public class MqttLogicServiceImpl implements MqttLogicService {
      * @Return void
      **/
     public void sortWeightPrinter(String topic, String msg) throws Exception {
-        log.debug("小票打印:{}", msg);
+        log.error("小票打印:{}", msg);
         Param param = JSON.parseObject(msg, Param.class);
         //WMS传入IP，根据IP作为tag校验哪个电脑的称
         if (param.getData() != null) {
@@ -112,7 +112,7 @@ public class MqttLogicServiceImpl implements MqttLogicService {
      * @Return void
      **/
     public void printLabel(String topic, String msg) {
-        log.debug("标签打印:{}", msg);
+        log.error("标签打印:{}", msg);
         HashMap map = JSON.parseObject(msg, HashMap.class);
         //WMS传入IP，根据IP作为tag校验哪个电脑的称
         if (map != null && map.containsKey("data") && map.containsKey("printRequest")) {

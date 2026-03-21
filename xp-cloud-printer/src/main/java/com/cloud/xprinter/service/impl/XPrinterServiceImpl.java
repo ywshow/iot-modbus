@@ -171,7 +171,7 @@ public class XPrinterServiceImpl implements XPrinterService {
                 }
                 content.append(shopping.getNum()).append("<td>");
                 //标品按每份重量打印，非标品按实际称重重量打印
-                if (printerData.getStandard() != null && printerData.getStandard() == 1) {
+                if (shopping.getStandard() != null && shopping.getStandard() == 1) {
                     content.append(shopping.getPerWeight().multiply(BigDecimal.valueOf(shopping.getNum())).intValue());
                 } else {
                     content.append(shopping.getTotalWeight().intValue()).append("<td>");
@@ -188,6 +188,7 @@ public class XPrinterServiceImpl implements XPrinterService {
         content.append("</L>");
 
         restRequest.setContent(content.toString());
+        log.error("小票打印内容：{}", JSON.toJSONString(restRequest));
         return iXpyunPrintService.print(restRequest);
     }
 

@@ -60,4 +60,9 @@ public class ShoppingList {
      * 单价
      */
     private BigDecimal price;
+
+    /**
+     * 是否标品，0：否；1：是
+     */
+    private Integer standard;
 }
