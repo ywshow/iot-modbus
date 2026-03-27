@@ -117,8 +117,10 @@ public class MqttLogicServiceImpl implements MqttLogicService {
         //WMS传入IP，根据IP作为tag校验哪个电脑的称
         if (map != null && map.containsKey("data") && map.containsKey("printRequest")) {
             PrinterData printerData = JSON.parseObject(JSON.toJSONString(map.get("data")), PrinterData.class);
-            PrintRequest printRequest = JSON.parseObject(JSON.toJSONString(map.get("printRequest")), PrintRequest.class);
-            XPrinterService.printLabel(printRequest, printerData);
+            if (printerData.getStandard() != 1) {
+                PrintRequest printRequest = JSON.parseObject(JSON.toJSONString(map.get("printRequest")), PrintRequest.class);
+                XPrinterService.printLabel(printRequest, printerData);
+            }
         }
     }
 }

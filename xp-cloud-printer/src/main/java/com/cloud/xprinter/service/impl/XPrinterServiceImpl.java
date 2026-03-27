@@ -172,7 +172,7 @@ public class XPrinterServiceImpl implements XPrinterService {
                 content.append(shopping.getNum()).append("<td>");
                 //标品按每份重量打印，非标品按实际称重重量打印
                 if (shopping.getStandard() != null && shopping.getStandard() == 1) {
-                    content.append(shopping.getPerWeight().multiply(BigDecimal.valueOf(shopping.getNum())).intValue());
+                    content.append(shopping.getPerWeight().multiply(BigDecimal.valueOf(shopping.getNum())).intValue()).append("<td>");
                 } else {
                     content.append(shopping.getTotalWeight().intValue()).append("<td>");
                 }
@@ -260,8 +260,11 @@ public class XPrinterServiceImpl implements XPrinterService {
         String content = "";
         content += "<PAGE>";
         content += "<SIZE>70,60</SIZE>";
-        content += "<TEXT x=\"8\" y=\"" + base + "\" w=\"1\" h=\"1\" r=\"0\">订单号：" + printerData.getOrderNo() + "</TEXT>";
-        content += "<TEXT x=\"8\" y=\"" + (line + base) + "\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getUserName() + " </TEXT>";
+        if (!StrUtil.isEmpty(printerData.getUserName())) {
+            content += "<TEXT x=\"8\" y=\"" + base + "\" w=\"1\" h=\"1\" r=\"0\">订单号：" + printerData.getOrderNo() + "</TEXT>";
+            content += "<TEXT x=\"8\" y=\"" + (line + base) + "\" w=\"1\" h=\"1\" r=\"0\">客户：" + printerData.getUserName() + " </TEXT>";
+        }
+
         for (int i = 0; i < row; i++) {
             if (row == 1) {
                 content += "<TEXT x=\"8\" y=\"" + ((i + 2) * line + base) + "\" w=\"1\" h=\"1\" r=\"0\">商品：" + printerData.getGoodsName() + " </TEXT>";
@@ -292,9 +295,13 @@ public class XPrinterServiceImpl implements XPrinterService {
         //条形码
         content += "<BC128 x=\"520\" y=\"48\" h=\"100\" s=\"1\" n=\"2\" w=\"2\" r=\"90\">" + printerData.getQrCode() + "</BC128>";
         //订单
-        content += "<QRC x=\"20\" y=\"300\" s=\"5\" e=\"L\">" + printerData.getOrderNo() + "</QRC>";
+        if (!StrUtil.isEmpty(printerData.getUserName())) {
+            content += "<QRC x=\"20\" y=\"300\" s=\"5\" e=\"L\">" + printerData.getOrderNo() + "</QRC>";
+        }
         content += "<TEXT x=\"270\" y=\"418\" w=\"1\" h=\"1\" r=\"0\">溯源码</TEXT>";
-        content += "<TEXT x=\"38\" y=\"418\" w=\"1\" h=\"1\" r=\"0\">订单号</TEXT>";
+        if (!StrUtil.isEmpty(printerData.getUserName())) {
+            content += "<TEXT x=\"38\" y=\"418\" w=\"1\" h=\"1\" r=\"0\">订单号</TEXT>";
+        }
         content += "</PAGE>";
         restRequest.setContent(content);
     }
