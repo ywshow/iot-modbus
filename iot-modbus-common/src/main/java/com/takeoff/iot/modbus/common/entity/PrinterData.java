@@ -157,4 +157,9 @@ public class PrinterData<T> implements Serializable {
      * 订单支付金额
      */
     private BigDecimal orderPayFee;
+
+    /**
+     * 会员编码
+     */
+    private String memberCode;
 }

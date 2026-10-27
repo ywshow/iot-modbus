@@ -294,13 +294,15 @@ public class XPrinterServiceImpl implements XPrinterService {
         //PT-324-32423-23-234-S324
         //条形码
         content += "<BC128 x=\"520\" y=\"48\" h=\"100\" s=\"1\" n=\"2\" w=\"2\" r=\"90\">" + printerData.getQrCode() + "</BC128>";
-        //订单
+        //订单号/序列号
         if (!StrUtil.isEmpty(printerData.getUserName())) {
-            content += "<QRC x=\"20\" y=\"300\" s=\"5\" e=\"L\">" + printerData.getOrderNo() + "</QRC>";
+            //content += "<QRC x=\"20\" y=\"300\" s=\"5\" e=\"L\">" + printerData.getOrderNo() + "</QRC>";
+            content += "<TEXT x=\"20\" y=\"300\" w=\"3\" h=\"3\" r=\"0\">" + printerData.getMemberCode() + "</TEXT>";
         }
         content += "<TEXT x=\"270\" y=\"418\" w=\"1\" h=\"1\" r=\"0\">溯源码</TEXT>";
         if (!StrUtil.isEmpty(printerData.getUserName())) {
-            content += "<TEXT x=\"38\" y=\"418\" w=\"1\" h=\"1\" r=\"0\">订单号</TEXT>";
+            //订单号/序列号
+            content += "<TEXT x=\"38\" y=\"418\" w=\"1\" h=\"1\" r=\"0\">序列号</TEXT>";
         }
         content += "</PAGE>";
         restRequest.setContent(content);
